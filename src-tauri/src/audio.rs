@@ -782,9 +782,10 @@ pub async fn transcribe_audio(
 /// * `state`      - État global de l'application
 /// * `audio_data` - Donnèes du micro
 /// * `translate`  - Si `true`, traduit le résultat en anglais
+/// * `prompt_tokens`  - Tokens du chunk précédent pour le contexte (peut être vide)
 ///
 /// # Returns
-/// Le texte final transcrit
+/// Un tuple `(texte, tokens)` où `tokens` est à passer au prochain appel
 ///
 /// # Errors
 /// * Si la transcription Whisper échoue
@@ -794,7 +795,8 @@ pub async fn transcribe_chunk(
     state: tauri::State<'_, AppState>,
     audio_data: Vec<u8>,
     translate: bool,
-) -> Result<(), String> {
+    prompt_tokens: Vec<i32>,
+) -> Result<(String, Vec<i32>), String> {
     // Détection du nombre de threads CPU
     let total_threads = std::thread::available_parallelism()
         .map(|n| n.get() as i32)
@@ -869,7 +871,7 @@ pub async fn transcribe_chunk(
         .map_err(|e| e.to_string())?;
 
     // Transcription
-    let text = {
+    let (text, tokens) = {
         let ctx_lock = state.whisper_ctx.lock()
             .map_err(|e| e.to_string())?;
 
@@ -886,6 +888,11 @@ pub async fn transcribe_chunk(
         params.set_translate(translate);
         params.set_n_threads(usable_threads);
 
+        // Injecter les tokens du chunk précédent comme contexte
+        if !prompt_tokens.is_empty() {
+            params.set_tokens(&prompt_tokens);
+        }
+
         // Lance la transcription
         whisper_state.full(params, &samples)
             .map_err(|e| e.to_string())?;
@@ -894,24 +901,47 @@ pub async fn transcribe_chunk(
         let n = whisper_state.full_n_segments();
         let mut text = String::new();
 
+        // Collecter les tokens du dernier segment pour le prochain chunk
+        let mut last_tokens: Vec<i32> = Vec::new();
+
         for i in 0..n {
             if let Some(segment) = whisper_state.get_segment(i) {
+
+                // Texte du segment
                 if let Ok(t) = segment.to_str() {
                     text.push_str(t);
+                }
+
+                // Tokens du dernier segment uniquement
+                if i == n - 1 {
+                    let token_count = segment.n_tokens();
+
+                    for t in 0..token_count {
+                        if let Some(token) = segment.get_token(t) {
+                            last_tokens.push(token.token_id());
+                        }
+                    }
                 }
             }
         }
 
-        text
-    }; // ctx_lock libéré ici
+        // Limiter à 64 tokens max pour ne pas surcharger le contexte
+        let tokens_to_keep = last_tokens
+            .into_iter()
+            .rev()
+            .take(64)
+            .collect::<Vec<_>>()
+            .into_iter()
+            .rev()
+            .collect::<Vec<i32>>();
 
-    // Nettoyage du texte
-    let text = text.trim().to_string();
+        (text.trim().to_string(), tokens_to_keep)
+    }; // ctx_lock libéré ici
 
     if !text.is_empty() {
         app.emit("transcription_chunk", &text)
             .map_err(|e| e.to_string())?;
     }
 
-    Ok(())
+    Ok((text, tokens))
 }

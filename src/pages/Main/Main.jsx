@@ -21,6 +21,7 @@ function Main() {
     const transcriptionRef                  = useRef("");
     const segmentsRef                       = useRef({});
     const receivedCountRef                  = useRef(0);
+    const promptTokensRef                   = useRef([]);
     
     useEffect(() => {
         const unlisten = listen("transcription_chunk", (event) => {
@@ -104,14 +105,15 @@ function Main() {
     async function startRecording() {
         setLiveText("");
         setError("");
-        
+        promptTokensRef.current = [];
+
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        
+
             const recordChunk = () => {
                 const mediaRecorder = new MediaRecorder(stream);
                 mediaRecorderRef.current = mediaRecorder;
-        
+
                 mediaRecorder.ondataavailable = async (e) => {
                     if (e.data.size === 0) return;
 
@@ -119,21 +121,29 @@ function Main() {
                     const audioData = Array.from(new Uint8Array(arrayBuffer));
 
                     try {
-                        await invoke("transcribe_chunk", { audioData, translate: translateMode });
+                        // Passer les tokens du chunk précédent
+                        const [_, tokens] = await invoke("transcribe_chunk", {
+                            audioData,
+                            translate: translateMode,
+                            promptTokens: promptTokensRef.current,
+                        });
+
+                        // Stocker les tokens pour le prochain chunk
+                        promptTokensRef.current = tokens;
                     } catch (err) {
                         setError(String(err));
                     }
 
                     if (mediaRecorderRef.current !== null) recordChunk();
                 };
-        
+
                 mediaRecorder.start();
 
                 setTimeout(() => {
                     if (mediaRecorder.state === "recording") mediaRecorder.stop();
                 }, 3000);
             };
-        
+
             recordChunk();
             setRecording(true);
         } catch (e) {
@@ -149,7 +159,8 @@ function Main() {
         }
 
         if (chunkIntervalRef.current) clearInterval(chunkIntervalRef.current);
-        
+
+        promptTokensRef.current = [];
         setRecording(false);
     }
     
@@ -248,7 +259,7 @@ function Main() {
                     <div className={s.resultHeader}>
                         <h3>Transcription en direct</h3>
                         <button className={s.btnCopy} onClick={() => copyText(liveText)}>
-                            {copied ? "✅ Copié !" : "📋 Copier"}
+                            {copied ? <><Check size={14} /> Copié !</> : <><Copy size={14} /> Copier</>}
                         </button>
                     </div>
                     <div className={s.resultText}>{liveText}</div>
@@ -256,7 +267,7 @@ function Main() {
                 )}
             </div>
         
-            {error && <div className={s.error}>❌ {error}</div>}
+            {error && <div className={s.error}><AlertCircle size={15} /> {error}</div>}
         </div>
     );
 }
