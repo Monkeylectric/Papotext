@@ -1,0 +1,247 @@
+/* Page principale */
+.page {
+    max-width: var(--content-max-width);
+    margin: 0 auto;
+}
+
+.pageHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-xl);
+}
+
+.pageTitle {
+    /* margin-bottom: var(--space-xl); */
+    margin-bottom: 0;
+}
+
+/* Sections */
+.section {
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    margin-bottom: var(--space-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.sectionTitle {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--space-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    color: var(--color-text);
+}
+
+/* Sélection fichier */
+.fileArea {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.fileSelected {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    background-color: var(--color-bg-hover);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Boutons */
+.btnPrimary {
+    background-color: var(--color-accent);
+    color: white;
+    padding: var(--space-sm) var(--space-xl);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+}
+
+.btnPrimary:hover:not(:disabled) {
+    background-color: var(--color-accent-hover);
+    box-shadow: var(--shadow-md);
+}
+
+.btnRecord {
+    background-color: var(--color-success);
+    color: white;
+    padding: var(--space-sm) var(--space-xl);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    box-shadow: var(--shadow-sm);
+}
+
+.btnRecord:hover:not(:disabled) {
+    filter: brightness(1.1);
+    box-shadow: var(--shadow-md);
+}
+
+.btnStop {
+    background-color: var(--color-danger);
+    color: white;
+    padding: var(--space-sm) var(--space-xl);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    animation: pulse 1.5s infinite;
+}
+
+.btnStop:hover {
+    background-color: var(--color-danger-hover);
+    animation: none;
+}
+
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(230, 57, 70, 0.4); }
+    50%      { box-shadow: 0 0 0 8px rgba(230, 57, 70, 0); }
+}
+
+/* Indicateur d'enregistrement */
+.recordingBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    background-color: rgba(230, 57, 70, 0.1);
+    color: var(--color-danger);
+    border-radius: var(--radius-sm);
+    padding: var(--space-xs) var(--space-md);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+}
+
+.recordingDot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--color-danger);
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0; }
+}
+
+/* Résultat */
+.result {
+    margin-top: var(--space-lg);
+}
+
+.resultHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-md);
+}
+
+.resultText {
+    background-color: var(--color-bg-hover);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+    line-height: 1.8;
+    color: var(--color-text);
+    font-size: var(--font-size-base);
+    white-space: pre-wrap;
+}
+
+.btnCopy {
+    background-color: transparent;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
+    font-size: var(--font-size-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.btnCopy:hover {
+    background-color: var(--color-bg-hover);
+    color: var(--color-text);
+}
+
+/* Erreur */
+.error {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    background-color: rgba(230, 57, 70, 0.08);
+    color: var(--color-danger);
+    border: 1px solid rgba(230, 57, 70, 0.2);
+    border-radius: var(--radius-sm);
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--font-size-sm);
+    margin-top: var(--space-md);
+}
+
+.progressWrapper {
+    width: 100%;
+    margin-top: var(--space-sm);
+}
+
+.progressLabel {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-xs);
+}
+
+.translateToggle {
+    display: flex;
+    justify-content: center;
+}
+
+.toggleLabel {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    user-select: none;
+}
+
+.toggle {
+    width: 36px;
+    height: 20px;
+    border-radius: 10px;
+    background: var(--color-border);
+    position: relative;
+    transition: background-color var(--transition);
+    flex-shrink: 0;
+}
+
+.toggleActive {
+    background: var(--color-accent);
+}
+
+.toggleThumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: white;
+    transition: transform var(--transition);
+    box-shadow: var(--shadow-sm);
+}
+
+.toggleActive .toggleThumb {
+    transform: translateX(16px);
+}
