@@ -654,6 +654,33 @@ pub async fn transcribe_audio(
     state: tauri::State<'_, AppState>,
     translate: bool,
 ) -> Result<String, String> {
+    // Verrou contre les transcriptions concurrentes
+    {
+        let mut flag = state.is_transcribing.lock()
+            .map_err(|e| e.to_string())?;
+        if *flag {
+            return Err("Une transcription est déjà en cours".to_string());
+        }
+        *flag = true;
+    } // flag libéré ici, les autres locks peuvent être pris librement
+
+    // Wrapper pour garantir que le flag est remis à false même en cas d'erreur
+    let result = transcribe_audio_inner(audio_path, app, state.clone(), translate)
+        .await;
+
+    *state.is_transcribing.lock()
+        .map_err(|e| e.to_string())? = false;
+
+    result
+}
+
+#[tauri::command]
+pub async fn transcribe_audio_inner(
+    audio_path: String,
+    app: tauri::AppHandle,
+    state: tauri::State<'_, AppState>,
+    translate: bool,
+) -> Result<String, String> {
     // Charge le pool Whisper.
     load_pool(&app, &state)?;
 
@@ -807,6 +834,9 @@ pub async fn transcribe_chunk(
 
     let usable_threads = ((total_threads as f64 * cpu_percent) as usize).max(1) as i32;
 
+    // Charge le modèle avant tout le travail
+    load_whisper_model(&app, &state)?;
+
     // Sauvegarde le chunk dans un fichier temporaire
     let temp_dir = std::env::temp_dir();
 
@@ -827,9 +857,6 @@ pub async fn transcribe_chunk(
 
     // Nettoyage automatique
     let _guard = TempFiles::new(vec![input_path.clone(), output_path.clone()]);
-
-    // Charge le modèle avant tout le travail
-    load_whisper_model(&app, &state)?;
 
     // Convertir en WAV 16kHz avec ffmpeg
     let input_str = input_path.to_str().ok_or("chemin invalide")?;

@@ -67,7 +67,8 @@ pub struct AppState {
     pub pool_model: Mutex<Option<String>>,          // Modèle actuellement chargé dans le pool
     pub threads_per_segment: Mutex<i32>,            // Nombre de threads utilisés par segment audio
     pub cpu_usage: Mutex<u32>,                      // Pourcentage CPU choisi par l'utilisateur
-    pub db: Mutex<Connection>                       // Connexion SQLite partagée
+    pub db: Mutex<Connection>,                      // Connexion SQLite partagée
+    pub is_transcribing: Mutex<bool>,               // Verrou contre les transcriptions concurrentes
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -91,6 +92,7 @@ pub fn run() {
                 threads_per_segment: Mutex::new(1), // 1 thread par segment
                 cpu_usage: Mutex::new(75),          // Utilisation du CPU à 75%
                 db: Mutex::new(conn),               // Stockage de la connexion SQLite
+                is_transcribing: Mutex::new(false), // Aucune transcription en cours
             });
 
             Ok(())
