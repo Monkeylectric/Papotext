@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { listen } from "@tauri-apps/api/event";
-import { FileAudio, Mic, Square, Copy, Check, Sparkles, Loader2 } from "lucide-react";
+import { FileAudio, Mic, Square, Copy, Check, Sparkles, Loader2, AlertCircle } from "lucide-react";
 import mainStyles from "./Main.module.css";
 
 function Main() {
@@ -13,7 +13,8 @@ function Main() {
     const [error, setError]                 = useState("");
     const [recording, setRecording]         = useState(false);
     const [liveText, setLiveText]           = useState("");
-    const [copied, setCopied]               = useState(false);
+    const [copiedFile, setCopiedFile]       = useState(false);
+    const [copiedLive, setCopiedLive]       = useState(false);
     const [progress, setProgress]           = useState(null);
     const [translateMode, setTranslateMode] = useState(false);
     const mediaRecorderRef                  = useRef(null);
@@ -164,12 +165,18 @@ function Main() {
         setRecording(false);
     }
     
-    function copyText(text) {
+    function copyFileText(text) {
         navigator.clipboard.writeText(text);
-        
-        setCopied(true);
-        
-        setTimeout(() => setCopied(false), 2000);
+
+        setCopiedFile(true);
+        setTimeout(() => setCopiedFile(false), 2000);
+    }
+
+    function copyLiveText(text) {
+        navigator.clipboard.writeText(text);
+
+        setCopiedLive(true);
+        setTimeout(() => setCopiedLive(false), 2000);
     }
     
     return (
@@ -224,8 +231,8 @@ function Main() {
                     <div className={s.result}>
                         <div className={s.resultHeader}>
                             <h3>Résultat</h3>
-                            <button className={s.btnCopy} onClick={() => copyText(transcription)}>
-                                {copied ? <><Check size={14} /> Copié !</> : <><Copy size={14} /> Copier</>}
+                            <button className={s.btnCopy} onClick={() => copyFileText(transcription)}>
+                                {copiedFile ? <><Check size={14} /> Copié !</> : <><Copy size={14} /> Copier</>}
                             </button>
                         </div>
                         <div className={s.resultText}>{transcription}</div>
@@ -258,8 +265,8 @@ function Main() {
                 <div className={s.result}>
                     <div className={s.resultHeader}>
                         <h3>Transcription en direct</h3>
-                        <button className={s.btnCopy} onClick={() => copyText(liveText)}>
-                            {copied ? <><Check size={14} /> Copié !</> : <><Copy size={14} /> Copier</>}
+                        <button className={s.btnCopy} onClick={() => copyLiveText(liveText)}>
+                            {copiedLive ? <><Check size={14} /> Copié !</> : <><Copy size={14} /> Copier</>}
                         </button>
                     </div>
                     <div className={s.resultText}>{liveText}</div>
