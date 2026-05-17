@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { FileAudio, Trash2, Copy, Check, ChevronDown, ChevronUp, Inbox, Loader2 } from "lucide-react";
+import { FileAudio, Trash2, Copy, Check, ChevronDown, ChevronUp, Inbox, Loader2, ChevronRight, ChevronLeft } from "lucide-react";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import historyStyles from "./History.module.css";
 
@@ -11,18 +11,25 @@ function History() {
     const [loading, setLoading]               = useState(true);
     const [copied, setCopied]                 = useState(false);
     const [confirmId, setConfirmId]           = useState(null);
+    const [page, setPage]                     = useState(1);
+    const [total, setTotal]                   = useState(0);
+    const [pageSize, setPageSize]             = useState(20);
+
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
     
     useEffect(() => {
-        loadHistory();
-    }, []);
+        loadHistory(page);
+    }, [page]);
     
-    async function loadHistory() {
+    async function loadHistory(p) {
         setLoading(true);
 
         try {
-            const result = await invoke("get_transcriptions");
+            const result = await invoke("get_transcriptions", { page: p });
 
-            setTranscriptions(result);
+            setTranscriptions(result.items);
+            setTotal(result.total);
+            setPageSize(result.page_size);
         } catch (e) {
             console.error(e);
         } finally {
@@ -35,9 +42,18 @@ function History() {
             await invoke("delete_transcription", { id });
 
             if (selected?.id === id) setSelected(null);
-
             setConfirmId(null);
-            loadHistory();
+
+            // Si on supprime le dernier élément de la page courante,
+            // on revient à la page précédente (sauf si on est déjà à la 1ère)
+            const itemsAfterDelete = transcriptions.length - 1;
+            const targetPage = itemsAfterDelete === 0 && page > 1 ? page - 1 : page;
+
+            if (targetPage !== page) {
+                setPage(targetPage);
+            } else {
+                loadHistory(page);
+            }
         } catch (e) {
             console.error(e);
         }
@@ -49,12 +65,42 @@ function History() {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     }
+
+    function toggleSelected(t) {
+        setSelected(prev => prev?.id === t.id ? null : t);
+    }
+
+    function goToPage(p) {
+        if (p < 1 || p > totalPages) return;
+        setSelected(null);
+        setPage(p);
+    }
+
+    /// Génère la liste des numéros de pages à afficher
+    function buildPageNumbers(current, total) {
+        if (total <= 7) {
+            return Array.from({ length: total }, (_, i) => i + 1);
+        }
+
+        const pages = [];
+        const addPage = (p) => { 
+            if (!pages.includes(p)) pages.push(p);
+        };
+
+        addPage(1);
+        if (current > 3) pages.push("…");
+        for (let p = Math.max(2, current - 1); p <= Math.min(total - 1, current + 1); p++) addPage(p);
+        if (current < total - 2) pages.push("…");
+        addPage(total);
+
+        return pages;
+    }
     
     if (loading) {
         return <div className={s.loading}><Loader2 size={15} className="spinning" /> Chargement...</div>;
     }
     
-    if (transcriptions.length === 0) {
+    if (total === 0) {
         return (
             <div className={s.page}>
                 <h1 className={s.pageTitle}>Historique</h1>
@@ -65,10 +111,6 @@ function History() {
                 </div>
             </div>
         );
-    }
-
-    function toggleSelected(t) {
-        setSelected(prev => prev?.id === t.id ? null : t);
     }
     
     return (
@@ -83,7 +125,10 @@ function History() {
                 />
             )}
 
-            <h1 className={s.pageTitle}>Historique</h1>
+            <div className={s.pageHeader}>
+                <h1 className={s.pageTitle}>Historique</h1>
+                <span className={s.totalCount}>{total} transcription{total > 1 ? "s" : ""}</span>
+            </div>
         
             <div className={s.list}>
                 {transcriptions.map((t) => (
@@ -130,6 +175,43 @@ function History() {
                     </div>
                 ))}
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className={s.pagination}>
+                    <button
+                        className={s.pageBtn}
+                        onClick={() => goToPage(page - 1)}
+                        disabled={page === 1}
+                        aria-label="Page précédente"
+                    >
+                        <ChevronLeft size={16} />
+                    </button>
+
+                    {buildPageNumbers(page, totalPages).map((p, i) =>
+                        p === "…" ? (
+                            <span key={`ellipsis-${i}`} className={s.pageEllipsis}>…</span>
+                        ) : (
+                            <button
+                                key={p}
+                                className={`${s.pageBtn} ${p === page ? s.pageBtnActive : ""}`}
+                                onClick={() => goToPage(p)}
+                            >
+                                {p}
+                            </button>
+                        )
+                    )}
+
+                    <button
+                        className={s.pageBtn}
+                        onClick={() => goToPage(page + 1)}
+                        disabled={page === totalPages}
+                        aria-label="Page suivante"
+                    >
+                        <ChevronRight size={16} />
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

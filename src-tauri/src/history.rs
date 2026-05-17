@@ -2,6 +2,9 @@ use tauri::Manager;
 use rusqlite::Connection;
 use crate::AppState;
 
+/// Nombre de transcriptions par page
+const PAGE_SIZE: i64 = 20;
+
 /// Structure de la transcription
 #[derive(serde::Serialize)]
 pub struct Transcription {
@@ -10,6 +13,15 @@ pub struct Transcription {
     text: String,       // Texte complet de la transcription
     model: String,      // Texte complet de la transcription
     created_at: String, // Date/heure de création
+}
+
+/// Structure de la réponse paginée
+#[derive(serde::Serialize)]
+pub struct TranscriptionPage {
+    items: Vec<Transcription>, // Transcriptions de la page courante
+    total: i64,                // Nombre total de transcriptions
+    page: i64,                 // Page courante (base 1)
+    page_size: i64,            // Nombre d'éléments par page
 }
 
 /// Initialisation de la base SQLite
@@ -90,29 +102,44 @@ pub fn save_transcription(
 /// 
 /// # Arguments
 /// * `state` - État global de l'application
+/// * `page`  - Numéro de page demandé (base 1)
 /// 
 /// # Returns
-/// Les 50 dernières transcriptions
+/// Une page de transcriptions avec le total général
 ///
 /// # Errors
 /// * Si le verouillage de la connexion échoue
 /// * Si la préparation de la requête échoue
 /// * si l'exécution de la requête échoue
 #[tauri::command]
-pub fn get_transcriptions(state: tauri::State<AppState>) -> Result<Vec<Transcription>, String> {
+pub fn get_transcriptions(
+    state: tauri::State<AppState>,
+    page: i64
+) -> Result<TranscriptionPage, String> {
     let db = state.db.lock()
         .map_err(|e| e.to_string())?;
 
-    // Préparation de la requête SQL
+    // Une page minimum
+    let page = page.max(1);
+    let offset = (page - 1) * PAGE_SIZE;
+
+    // Nombre total de transcriptions
+    let total: i64 = db.query_row(
+        "SELECT COUNT(*) FROM transcriptions",
+        [],
+        |row| row.get(0),
+    ).map_err(|e| e.to_string())?;
+
+    // Requête paginée
     let mut stmt = db.prepare(
         "SELECT id, filename, text, model, created_at 
         FROM transcriptions 
         ORDER BY created_at DESC
-        LIMIT 50"
+        LIMIT ?1 OFFSET ?2"
     ).map_err(|e| e.to_string())?;
 
     // Exécution de la requête
-    let transcriptions = stmt.query_map([], |row| {
+    let items = stmt.query_map(rusqlite::params![PAGE_SIZE, offset], |row| {
         Ok(Transcription {
             id: row.get(0)?,
             filename: row.get(1)?,
@@ -122,10 +149,15 @@ pub fn get_transcriptions(state: tauri::State<AppState>) -> Result<Vec<Transcrip
         })
     })
     .map_err(|e| e.to_string())?
-    .filter_map(|r| r.ok()) // Filtrage des erreurs éventuelles
+    .filter_map(|r| r.ok())
     .collect();
 
-    Ok(transcriptions)
+    Ok(TranscriptionPage {
+        items,
+        total,
+        page,
+        page_size: PAGE_SIZE,
+    })
 }
 
 /// Suppression d'une transcription
