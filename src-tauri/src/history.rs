@@ -160,6 +160,33 @@ pub fn get_transcriptions(
     })
 }
 
+/// Mise à jour du texte d'une transcription
+/// 
+/// # Arguments
+/// * `state` - État global de l'application
+/// * `id`    - Identifiant de la transcription à modifier
+/// * `text`  - Nouveau texte
+///
+/// # Errors
+/// * Si le verouillage de la connexion échoue
+/// * Si la mise à jour échoue
+#[tauri::command]
+pub fn update_transcription(
+    state: tauri::State<AppState>,
+    id: i64,
+    text: String,
+) -> Result<(), String> {
+    let db = state.db.lock()
+        .map_err(|e| e.to_string())?;
+
+    db.execute(
+        "UPDATE transcriptions SET text = ?1 WHERE id = ?2",
+        rusqlite::params![text, id],
+    ).map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
 /// Suppression d'une transcription
 /// 
 /// Supprime une entrée de l'historique par son ID

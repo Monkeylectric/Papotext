@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { FileAudio, Trash2, Copy, Check, ChevronDown, ChevronUp, Inbox, Loader2, ChevronRight, ChevronLeft } from "lucide-react";
+import { FileAudio, Trash2, Copy, Check, ChevronDown, ChevronUp, Inbox, Loader2, ChevronRight, ChevronLeft, Pencil, X, Save } from "lucide-react";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import historyStyles from "./History.module.css";
 
@@ -14,12 +14,26 @@ function History() {
     const [page, setPage]                     = useState(1);
     const [total, setTotal]                   = useState(0);
     const [pageSize, setPageSize]             = useState(20);
+    const [editingId, setEditingId]           = useState(null);
+    const [editText, setEditText]             = useState("");
+    const [saving, setSaving]                 = useState(false);
+    const textareaRef                         = useRef(null);
 
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
     
     useEffect(() => {
         loadHistory(page);
     }, [page]);
+
+    // Focus automatique et curseur en fin de texte à l'ouverture de l'éditeur
+    useEffect(() => {
+        if (editingId !== null && textareaRef.current) {
+            const el = textareaRef.current;
+
+            el.focus();
+            el.setSelectionRange(el.value.length, el.value.length);
+        }
+    }, [editingId]);
     
     async function loadHistory(p) {
         setLoading(true);
@@ -56,6 +70,41 @@ function History() {
             }
         } catch (e) {
             console.error(e);
+        }
+    }
+
+    function startEdit(t, e) {
+        e.stopPropagation();
+
+        setEditingId(t.id);
+        setEditText(t.text);
+    }
+
+    function cancelEdit() {
+        setEditingId(null);
+        setEditText("");
+    }
+
+    async function saveEdit(id) {
+        if (saving) return;
+
+        setSaving(true);
+
+        try {
+            await invoke("update_transcription", { id, text: editText });
+
+            // Mise à jour locale sans rechargement réseau
+            setTranscriptions(prev => prev.map(t =>
+                t.id === id ? { ...t, text: editText } : t
+            ));
+
+            // Synchroniser l'élément sélectionné si c'est lui
+            setSelected(prev => prev?.id === id ? { ...prev, text: editText } : prev);
+            cancelEdit();
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setSaving(false);
         }
     }
     
@@ -164,12 +213,46 @@ function History() {
                         {/* Accordion — s'ouvre sous la carte */}
                         {selected?.id === t.id && (
                             <div className={s.accordion}>
-                                <div className={s.accordionText}>{t.text}</div>
-                                <div className={s.accordionActions}>
-                                    <button className={s.btnCopy} onClick={() => copyText(t.text)}>
-                                        {copied ? <><Check size={14} /> Copié !</> : <><Copy size={14} /> Copier le texte</>}
-                                    </button>
-                                </div>
+                                {editingId === t.id ? (
+                                    // Mode édition 
+                                    <>
+                                        <textarea
+                                            ref={textareaRef}
+                                            className={s.editTextarea}
+                                            value={editText}
+                                            onChange={e => setEditText(e.target.value)}
+                                            onKeyDown={e => {
+                                                if (e.key === "Escape") cancelEdit();
+                                                if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) saveEdit(t.id);
+                                            }}
+                                        />
+                                        <p className={s.editHint}>Ctrl+Entrée pour sauvegarder · Échap pour annuler</p>
+                                        <div className={s.accordionActions}>
+                                            <button className={s.btnCancel} onClick={cancelEdit}>
+                                                <X size={14} /> Annuler
+                                            </button>
+                                            <button className={s.btnSave} onClick={() => saveEdit(t.id)} disabled={saving}>
+                                                {saving
+                                                    ? <><Loader2 size={14} className="spinning" /> Enregistrement...</>
+                                                    : <><Save size={14} /> Enregistrer</>
+                                                }
+                                            </button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    // Mode lecture
+                                    <>
+                                        <div className={s.accordionText}>{t.text}</div>
+                                        <div className={s.accordionActions}>
+                                            <button className={s.btnEdit} onClick={(e) => startEdit(t, e)}>
+                                                <Pencil size={14} /> Modifier
+                                            </button>
+                                            <button className={s.btnCopy} onClick={() => copyText(t.text)}>
+                                                {copied ? <><Check size={14} /> Copié !</> : <><Copy size={14} /> Copier</>}
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         )}
                     </div>
