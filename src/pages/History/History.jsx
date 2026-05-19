@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { FileAudio, Trash2, Copy, Check, ChevronDown, ChevronUp, Inbox, Loader2, ChevronRight, ChevronLeft, Pencil, X, Save } from "lucide-react";
+import { FileAudio, Trash2, Copy, Check, ChevronDown, ChevronUp, Inbox, Loader2, ChevronRight, ChevronLeft, Pencil, X, Save, Volume2, VolumeX } from "lucide-react";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import historyStyles from "./History.module.css";
 
@@ -17,7 +17,11 @@ function History() {
     const [editingId, setEditingId]           = useState(null);
     const [editText, setEditText]             = useState("");
     const [saving, setSaving]                 = useState(false);
+    const [audioSrc, setAudioSrc]             = useState(null);
+    const [activeSegIdx, setActiveSegIdx]     = useState(-1);
+    const [loadingAudio, setLoadingAudio]     = useState(false);
     const textareaRef                         = useRef(null);
+    const audioRef                            = useRef(null);
 
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
     
@@ -34,6 +38,44 @@ function History() {
             el.setSelectionRange(el.value.length, el.value.length);
         }
     }, [editingId]);
+
+    async function loadAudio(t, e) {
+        e.stopPropagation();
+
+        // Si déjà ouvert, on ferme
+        if (audioSrc?.id === t.id) {
+            setAudioSrc(null);
+            setActiveSegIdx(-1);
+
+            return;
+        }
+
+        if (!t.audio_path) return;
+
+        setLoadingAudio(true);
+        
+        try {
+            const base64 = await invoke("get_audio_base64", { path: t.audio_path });
+            const segments = t.segments ? JSON.parse(t.segments) : [];
+            
+            setAudioSrc({ id: t.id, src: base64, segments });
+            setActiveSegIdx(-1);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoadingAudio(false);
+        }
+    }
+
+    function handleTimeUpdate() {
+        if (!audioRef.current || !audioSrc?.segments?.length) return;
+
+        // Whisper timestamps en centisecondes, audio en secondes
+        const cs = audioRef.current.currentTime * 100;
+        const idx = audioSrc.segments.findIndex(s => cs >= s.t0 && cs <= s.t1);
+
+        setActiveSegIdx(idx);
+    }
     
     async function loadHistory(p) {
         setLoading(true);
@@ -213,9 +255,33 @@ function History() {
                         {/* Accordion — s'ouvre sous la carte */}
                         {selected?.id === t.id && (
                             <div className={s.accordion}>
+                                {/* Lecteur audio — toujours visible si chargé */}
+                                {audioSrc?.id === t.id && (
+                                    <audio
+                                        ref={audioRef}
+                                        src={audioSrc.src}
+                                        controls
+                                        className={s.audioPlayer}
+                                        onTimeUpdate={handleTimeUpdate}
+                                        onEnded={() => setActiveSegIdx(-1)}
+                                    />
+                                )}
+
                                 {editingId === t.id ? (
-                                    // Mode édition 
                                     <>
+                                        {/* Surbrillance au-dessus si audio actif */}
+                                        {audioSrc?.id === t.id && audioSrc.segments.length > 0 && (
+                                            <div className={`${s.accordionText} ${s.accordionTextReadonly}`}>
+                                                {audioSrc.segments.map((seg, idx) => (
+                                                    <span
+                                                        key={idx}
+                                                        className={idx === activeSegIdx ? s.segmentHighlight : s.segment}
+                                                    >
+                                                        {seg.text}{" "}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
                                         <textarea
                                             ref={textareaRef}
                                             className={s.editTextarea}
@@ -228,6 +294,13 @@ function History() {
                                         />
                                         <p className={s.editHint}>Ctrl+Entrée pour sauvegarder · Échap pour annuler</p>
                                         <div className={s.accordionActions}>
+                                            {t.audio_path && (
+                                                <button className={s.btnAudio} onClick={(e) => loadAudio(t, e)} disabled={loadingAudio}>
+                                                    {loadingAudio ? <><Loader2 size={14} className="spinning" /> Chargement...</>
+                                                    : audioSrc?.id === t.id ? <><VolumeX size={14} /> Fermer l'audio</>
+                                                    : <><Volume2 size={14} /> Écouter</>}
+                                                </button>
+                                            )}
                                             <button className={s.btnCancel} onClick={cancelEdit}>
                                                 <X size={14} /> Annuler
                                             </button>
@@ -240,10 +313,28 @@ function History() {
                                         </div>
                                     </>
                                 ) : (
-                                    // Mode lecture
                                     <>
-                                        <div className={s.accordionText}>{t.text}</div>
+                                        <div className={s.accordionText}>
+                                            {audioSrc?.id === t.id && audioSrc.segments.length > 0
+                                                ? audioSrc.segments.map((seg, idx) => (
+                                                    <span
+                                                        key={idx}
+                                                        className={idx === activeSegIdx ? s.segmentHighlight : s.segment}
+                                                    >
+                                                        {seg.text}{" "}
+                                                    </span>
+                                                ))
+                                                : t.text
+                                            }
+                                        </div>
                                         <div className={s.accordionActions}>
+                                            {t.audio_path && (
+                                                <button className={s.btnAudio} onClick={(e) => loadAudio(t, e)} disabled={loadingAudio}>
+                                                    {loadingAudio ? <><Loader2 size={14} className="spinning" /> Chargement...</>
+                                                    : audioSrc?.id === t.id ? <><VolumeX size={14} /> Fermer l'audio</>
+                                                    : <><Volume2 size={14} /> Écouter</>}
+                                                </button>
+                                            )}
                                             <button className={s.btnEdit} onClick={(e) => startEdit(t, e)}>
                                                 <Pencil size={14} /> Modifier
                                             </button>

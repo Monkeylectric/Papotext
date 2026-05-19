@@ -10,8 +10,10 @@ const PAGE_SIZE: i64 = 20;
 pub struct Transcription {
     id: i64,            // ID unique auto-incrémenté SQLite
     filename: String,   // Nom du fichier audio transcrit
+    audio_path: Option<String>, // Chemin du fichier audio
     text: String,       // Texte complet de la transcription
     model: String,      // Texte complet de la transcription
+    segments: Option<String>, // Segments des transcriptions (timestamps + texte)
     created_at: String, // Date/heure de création
 }
 
@@ -49,15 +51,29 @@ pub fn init_database(app: &tauri::AppHandle) -> Result<Connection, String> {
         .map_err(|e| e.to_string())?;
 
     // Création de la table si elle n'existe pas
+    // conn.execute_batch("
+    //     CREATE TABLE IF NOT EXISTS transcriptions (
+    //         id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    //         filename    TEXT NOT NULL,
+    //         text        TEXT NOT NULL,
+    //         model       TEXT NOT NULL,
+    //         created_at  TEXT NOT NULL
+    //     );
+    // ").map_err(|e| e.to_string())?;
     conn.execute_batch("
         CREATE TABLE IF NOT EXISTS transcriptions (
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
             filename    TEXT NOT NULL,
             text        TEXT NOT NULL,
             model       TEXT NOT NULL,
-            created_at  TEXT NOT NULL
+            created_at  TEXT NOT NULL,
+            segments    TEXT
         );
     ").map_err(|e| e.to_string())?;
+
+    // Migration: ajoute les colonnes si elles n'existent pas encore
+    let _ = conn.execute_batch("ALTER TABLE transcriptions ADD COLUMN segments TEXT;");
+    let _ = conn.execute_batch("ALTER TABLE transcriptions ADD COLUMN audio_path TEXT;");
 
     Ok(conn)
 }
@@ -77,8 +93,10 @@ pub fn init_database(app: &tauri::AppHandle) -> Result<Connection, String> {
 pub fn save_transcription(
     state: tauri::State<AppState>,
     filename: String,
+    audio_path: String,
     text: String,
     model: String,
+    segments: Option<String>,
 ) -> Result<(), String> {
     // Verrouillage de la connexion
     let db = state.db.lock()
@@ -91,8 +109,8 @@ pub fn save_transcription(
 
     // Insertion SQL
     db.execute(
-        "INSERT INTO transcriptions (filename, text, model, created_at) VALUES (?1, ?2, ?3, ?4)",
-        rusqlite::params![filename, text, model, now],
+        "INSERT INTO transcriptions (filename, audio_path, text, model, created_at, segments) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+        rusqlite::params![filename, audio_path, text, model, now, segments],
     ).map_err(|e| e.to_string())?;
 
     Ok(())
@@ -132,7 +150,7 @@ pub fn get_transcriptions(
 
     // Requête paginée
     let mut stmt = db.prepare(
-        "SELECT id, filename, text, model, created_at 
+        "SELECT id, filename, audio_path, text, model, created_at, segments 
         FROM transcriptions 
         ORDER BY created_at DESC
         LIMIT ?1 OFFSET ?2"
@@ -143,9 +161,11 @@ pub fn get_transcriptions(
         Ok(Transcription {
             id: row.get(0)?,
             filename: row.get(1)?,
-            text: row.get(2)?,
-            model: row.get(3)?,
-            created_at: row.get(4)?,
+            audio_path: row.get(2)?,
+            text: row.get(3)?,
+            model: row.get(4)?,
+            created_at: row.get(5)?,
+            segments: row.get(6)?,
         })
     })
     .map_err(|e| e.to_string())?
@@ -212,4 +232,39 @@ pub fn delete_transcription(
     ).map_err(|e| e.to_string())?;
 
     Ok(())
+}
+
+#[tauri::command]
+pub fn get_audio_base64(path: String) -> Result<String, String> {
+    use std::io::Read;
+
+    let mut file = std::fs::File::open(&path)
+        .map_err(|_| "Fichier audio introuvable. Il a peut-être été déplacé ou supprimé.".to_string())?;
+
+    let mut buf = Vec::new();
+    file.read_to_end(&mut buf)
+        .map_err(|e| e.to_string())?;
+
+    // Détection du format pour le data URL
+    let mime = if path.ends_with(".mp3") { "audio/mpeg" } else { "audio/wav" };
+
+    Ok(format!("data:{};base64,{}", mime, base64_encode(&buf)))
+}
+
+/// Encodage base64 sans dépendance externe
+fn base64_encode(data: &[u8]) -> String {
+    const CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut result = String::with_capacity((data.len() + 2) / 3 * 4);
+
+    for chunk in data.chunks(3) {
+        let b0 = chunk[0] as usize;
+        let b1 = if chunk.len() > 1 { chunk[1] as usize } else { 0 };
+        let b2 = if chunk.len() > 2 { chunk[2] as usize } else { 0 };
+        
+        result.push(CHARS[(b0 >> 2)] as char);
+        result.push(CHARS[((b0 & 3) << 4) | (b1 >> 4)] as char);
+        result.push(if chunk.len() > 1 { CHARS[((b1 & 15) << 2) | (b2 >> 6)] as char } else { '=' });
+        result.push(if chunk.len() > 2 { CHARS[b2 & 63] as char } else { '=' });
+    }
+    result
 }

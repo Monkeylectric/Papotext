@@ -14,6 +14,13 @@ use crate::models::get_models_dir;
 use crate::settings::get_selected_model;
 use crate::history::save_transcription;
 
+#[derive(serde::Serialize, Clone)]
+pub struct Segment {
+    pub t0: i64,   // début en centisecondes
+    pub t1: i64,   // fin en centisecondes
+    pub text: String,
+}
+
 /// Gestion automatique des fichiers temporaires
 struct TempFiles {
     // Liste des fichiers à supprimer automatiquement.
@@ -73,7 +80,7 @@ fn audio_filters_realtime() -> String {
 /// 
 /// # Returns
 /// Result<(index_segment, texte), erreur>
-type SegmentResult = tokio::task::JoinHandle<Result<(usize, String), String>>;
+type SegmentResult = tokio::task::JoinHandle<Result<(usize, String, Vec<Segment>), String>>;
 
 /// Conversion audio vers WAV mono 16kHz
 /// 
@@ -380,7 +387,7 @@ async fn transcribe_segment_async(
     ctx_arc: std::sync::Arc<std::sync::Mutex<WhisperContext>>,
     translate: bool,
     threads_per_segment: i32,
-) -> Result<String, String> {
+) -> Result<(String, Vec<Segment>), String> {
     // Création du fichier temporaire
     let temp_path = std::env::temp_dir()
         .join(format!("segment_{}_{}.wav", index, start as u64));
@@ -452,15 +459,20 @@ async fn transcribe_segment_async(
 
         let n = whisper_state.full_n_segments();
         let mut text = String::new();
+        let mut segments: Vec<Segment> = Vec::new();
 
-        // Concatène les segments
         for i in 0..n {
             if let Some(seg) = whisper_state.get_segment(i) {
-                if let Ok(t) = seg.to_str() { text.push_str(t); }
+                let t0 = seg.start_timestamp() + (start * 100.0) as i64;
+                let t1 = seg.end_timestamp() + (start * 100.0) as i64;
+                if let Ok(t) = seg.to_str() {
+                    segments.push(Segment { t0, t1, text: t.trim().to_string() });
+                    text.push_str(t);
+                }
             }
         }
 
-        Ok::<String, String>(text.trim().to_string())
+        Ok::<(String, Vec<Segment>), String>((text.trim().to_string(), segments))
     })
     .await
     .map_err(|e| e.to_string())? 
@@ -596,20 +608,26 @@ async fn transcribe_short(
 
         let n = whisper_state.full_n_segments();
         let mut text = String::new();
+        let mut segments: Vec<Segment> = Vec::new();
 
         for i in 0..n {
             if let Some(seg) = whisper_state.get_segment(i) {
-                if let Ok(t) = seg.to_str() { text.push_str(t); }
+                let t0 = seg.start_timestamp();
+                let t1 = seg.end_timestamp();
+                if let Ok(t) = seg.to_str() {
+                    segments.push(Segment { t0, t1, text: t.trim().to_string() });
+                    text.push_str(t);
+                }
             }
         }
 
-        Ok::<String, String>(text.trim().to_string())
+        Ok::<(String, Vec<Segment>), String>((text.trim().to_string(), segments))
     })
     .await
     .map_err(|e| e.to_string())?;
 
     // déplie le Result<String, String> interne
-    let text = text?;
+    let (text, segments) = text?;
 
     // Extraction du nom de fichier
     let filename = std::path::Path::new(audio_path)
@@ -619,7 +637,8 @@ async fn transcribe_short(
         .to_string();
 
     // Sauvegarde dans l'historique
-    let _ = save_transcription(state, filename, text.trim().to_string(), selected_model);
+    let segments_json = serde_json::to_string(&segments).ok();
+    let _ = save_transcription(state, filename, audio_path.to_string(), text.trim().to_string(), selected_model, segments_json);
 
     // Emission du texte final comme un segment unique
     app.emit("transcription_progress", serde_json::json!({
@@ -748,7 +767,7 @@ pub async fn transcribe_audio_inner(
                 threads_per_segment,
             ).await?;
 
-            Ok::<(usize, String), String>((i, text))
+            Ok::<(usize, String, Vec<Segment>), String>((i, text.0, text.1))
         }));
     }
 
@@ -757,10 +776,10 @@ pub async fn transcribe_audio_inner(
 
     while let Some(handle_result) = futures.next().await {
         // Résultat de la tâche Tokio
-        let join_result: Result<Result<(usize, String), String>, _> = handle_result;
-        let (i, text) = join_result.map_err(|e: tokio::task::JoinError| e.to_string())??;
+        let join_result: Result<Result<(usize, String, Vec<Segment>), String>, _> = handle_result;
+        let (i, text, segs) = join_result.map_err(|e: tokio::task::JoinError| e.to_string())??;
         // Sauvegarde du résultat
-        results.push((i, text.clone()));
+        results.push((i, text.clone(), segs));
 
         // Nombre de segments déjà terminés
         let completed = results.len();
@@ -777,15 +796,21 @@ pub async fn transcribe_audio_inner(
     }
 
     // Réassemblage final
-    results.sort_by_key(|(i, _)| *i);
+    results.sort_by_key(|(i, _, _)| *i);
 
     // Concaténation finale
     let full_text = results
         .iter()
-        .filter(|(_, t)| !t.is_empty())
-        .map(|(_, t)| t.as_str())
+        .filter(|(_, t, _)| !t.is_empty())
+        .map(|(_, t, _)| t.as_str())
         .collect::<Vec<_>>()
         .join(" ");
+
+    // Assemblage des segments dans l'ordre
+    let all_segments: Vec<&Segment> = results
+        .iter()
+        .flat_map(|(_, _, segs)| segs.iter())
+        .collect();
 
     // Extraction du nom de fichier
     let filename = std::path::Path::new(&audio_path)
@@ -795,7 +820,8 @@ pub async fn transcribe_audio_inner(
         .to_string();
 
     // Sauvegarde dans l'historique
-    let _ = save_transcription(state, filename, full_text.trim().to_string(), selected_model);
+    let segments_json = serde_json::to_string(&all_segments).ok();
+    let _ = save_transcription(state, filename, audio_path.clone(), full_text.trim().to_string(), selected_model, segments_json);
 
     Ok(full_text.trim().to_string())
 }
