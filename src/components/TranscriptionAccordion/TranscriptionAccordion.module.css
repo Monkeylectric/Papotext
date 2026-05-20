@@ -1,0 +1,43 @@
+.accordion {
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-accent);
+    border-top: none;
+    border-bottom-left-radius: var(--radius-md);
+    border-bottom-right-radius: var(--radius-md);
+    padding: var(--space-lg);
+}
+
+.audioPlayer {
+    width: 100%;
+    margin-bottom: var(--space-md);
+    border-radius: var(--radius-sm);
+    accent-color: var(--color-accent);
+}
+
+.editTextarea {
+    width: 100%;
+    min-height: 260px;
+    background-color: var(--color-bg-hover);
+    border: 1.5px solid var(--color-accent);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    line-height: 1.8;
+    color: var(--color-text);
+    resize: vertical;
+    outline: none;
+    transition: border-color var(--transition), box-shadow var(--transition);
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+    margin-bottom: var(--space-xs);
+}
+
+.editTextarea:focus {
+    box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.15);
+}
+
+.editHint {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-md);
+}

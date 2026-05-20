@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { FileAudio, Trash2, Copy, Check, ChevronDown, ChevronUp, Inbox, Loader2, ChevronRight, ChevronLeft, Pencil, X, Save, Volume2, VolumeX } from "lucide-react";
-import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
+import { Copy, Inbox, Loader2, Save } from "lucide-react";
+import ConfirmModal from "@components/ConfirmModal/ConfirmModal";
+import TranscriptionCard from "@components/TranscriptionCard/TranscriptionCard";
+import TranscriptionAccordion from "@components/TranscriptionAccordion/TranscriptionAccordion";
+import Pagination from "@components/Pagination/Pagination";
 import historyStyles from "./History.module.css";
 
 function History() {
@@ -20,6 +23,7 @@ function History() {
     const [audioSrc, setAudioSrc]             = useState(null);
     const [activeSegIdx, setActiveSegIdx]     = useState(-1);
     const [loadingAudio, setLoadingAudio]     = useState(false);
+    const [exportOpenId, setExportOpenId]     = useState(null);
     const textareaRef                         = useRef(null);
     const audioRef                            = useRef(null);
 
@@ -166,26 +170,6 @@ function History() {
         setSelected(null);
         setPage(p);
     }
-
-    /// Génère la liste des numéros de pages à afficher
-    function buildPageNumbers(current, total) {
-        if (total <= 7) {
-            return Array.from({ length: total }, (_, i) => i + 1);
-        }
-
-        const pages = [];
-        const addPage = (p) => { 
-            if (!pages.includes(p)) pages.push(p);
-        };
-
-        addPage(1);
-        if (current > 3) pages.push("…");
-        for (let p = Math.max(2, current - 1); p <= Math.min(total - 1, current + 1); p++) addPage(p);
-        if (current < total - 2) pages.push("…");
-        addPage(total);
-
-        return pages;
-    }
     
     if (loading) {
         return <div className={s.loading}><Loader2 size={15} className="spinning" /> Chargement...</div>;
@@ -225,126 +209,34 @@ function History() {
                 {transcriptions.map((t) => (
                     <div key={t.id}>
                         {/* Carte */}
-                        <div
-                            className={`${s.card} ${selected?.id === t.id ? s.cardActive : ""}`}
-                            onClick={() => toggleSelected(t)}
-                        >
-                            <div className={s.cardHeader}>
-                                <span className={s.cardFilename}><FileAudio size={15} /> {t.filename}</span>
-                                <div className={s.cardRight}>
-                                    <span className={s.cardMeta}>{t.created_at} · {t.model}</span>
-                                    <button
-                                        className={s.btnDelete}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setConfirmId(t.id);
-                                        }}
-                                    >
-                                        <Trash2 size={15} />
-                                    </button>
-                                    <span className={s.chevron}>
-                                        {selected?.id === t.id ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-                                    </span>
-                                </div>
-                            </div>
-                            {selected?.id !== t.id && (
-                                <p className={s.cardPreview}>{t.text}</p>
-                            )}
-                        </div>
+                        <TranscriptionCard 
+                            transcription={t} 
+                            isActive={selected?.id === t.id} 
+                            onToggle={toggleSelected} 
+                            onDelete={setConfirmId}
+                        />
 
                         {/* Accordion — s'ouvre sous la carte */}
                         {selected?.id === t.id && (
-                            <div className={s.accordion}>
-                                {/* Lecteur audio — toujours visible si chargé */}
-                                {audioSrc?.id === t.id && (
-                                    <audio
-                                        ref={audioRef}
-                                        src={audioSrc.src}
-                                        controls
-                                        className={s.audioPlayer}
-                                        onTimeUpdate={handleTimeUpdate}
-                                        onEnded={() => setActiveSegIdx(-1)}
-                                    />
-                                )}
-
-                                {editingId === t.id ? (
-                                    <>
-                                        {/* Surbrillance au-dessus si audio actif */}
-                                        {audioSrc?.id === t.id && audioSrc.segments.length > 0 && (
-                                            <div className={`${s.accordionText} ${s.accordionTextReadonly}`}>
-                                                {audioSrc.segments.map((seg, idx) => (
-                                                    <span
-                                                        key={idx}
-                                                        className={idx === activeSegIdx ? s.segmentHighlight : s.segment}
-                                                    >
-                                                        {seg.text}{" "}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
-                                        <textarea
-                                            ref={textareaRef}
-                                            className={s.editTextarea}
-                                            value={editText}
-                                            onChange={e => setEditText(e.target.value)}
-                                            onKeyDown={e => {
-                                                if (e.key === "Escape") cancelEdit();
-                                                if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) saveEdit(t.id);
-                                            }}
-                                        />
-                                        <p className={s.editHint}>Ctrl+Entrée pour sauvegarder · Échap pour annuler</p>
-                                        <div className={s.accordionActions}>
-                                            {t.audio_path && (
-                                                <button className={s.btnAudio} onClick={(e) => loadAudio(t, e)} disabled={loadingAudio}>
-                                                    {loadingAudio ? <><Loader2 size={14} className="spinning" /> Chargement...</>
-                                                    : audioSrc?.id === t.id ? <><VolumeX size={14} /> Fermer l'audio</>
-                                                    : <><Volume2 size={14} /> Écouter</>}
-                                                </button>
-                                            )}
-                                            <button className={s.btnCancel} onClick={cancelEdit}>
-                                                <X size={14} /> Annuler
-                                            </button>
-                                            <button className={s.btnSave} onClick={() => saveEdit(t.id)} disabled={saving}>
-                                                {saving
-                                                    ? <><Loader2 size={14} className="spinning" /> Enregistrement...</>
-                                                    : <><Save size={14} /> Enregistrer</>
-                                                }
-                                            </button>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <>
-                                        <div className={s.accordionText}>
-                                            {audioSrc?.id === t.id && audioSrc.segments.length > 0
-                                                ? audioSrc.segments.map((seg, idx) => (
-                                                    <span
-                                                        key={idx}
-                                                        className={idx === activeSegIdx ? s.segmentHighlight : s.segment}
-                                                    >
-                                                        {seg.text}{" "}
-                                                    </span>
-                                                ))
-                                                : t.text
-                                            }
-                                        </div>
-                                        <div className={s.accordionActions}>
-                                            {t.audio_path && (
-                                                <button className={s.btnAudio} onClick={(e) => loadAudio(t, e)} disabled={loadingAudio}>
-                                                    {loadingAudio ? <><Loader2 size={14} className="spinning" /> Chargement...</>
-                                                    : audioSrc?.id === t.id ? <><VolumeX size={14} /> Fermer l'audio</>
-                                                    : <><Volume2 size={14} /> Écouter</>}
-                                                </button>
-                                            )}
-                                            <button className={s.btnEdit} onClick={(e) => startEdit(t, e)}>
-                                                <Pencil size={14} /> Modifier
-                                            </button>
-                                            <button className={s.btnCopy} onClick={() => copyText(t.text)}>
-                                                {copied ? <><Check size={14} /> Copié !</> : <><Copy size={14} /> Copier</>}
-                                            </button>
-                                        </div>
-                                    </>
-                                )}
-                            </div>
+                            <TranscriptionAccordion
+                                transcription={t}
+                                audioSrc={audioSrc}
+                                audioRef={audioRef}
+                                activeSegIdx={activeSegIdx}
+                                loadingAudio={loadingAudio}
+                                onLoadAudio={loadAudio}
+                                onTimeUpdate={handleTimeUpdate}
+                                onAudioEnded={() => setActiveSegIdx(-1)}
+                                editingId={editingId}
+                                editText={editText}
+                                saving={saving}
+                                onEditTextChange={setEditText}
+                                onStartEdit={startEdit}
+                                onCancelEdit={cancelEdit}
+                                onSaveEdit={saveEdit}
+                                copied={copied}
+                                onCopy={copyText}
+                            />
                         )}
                     </div>
                 ))}
@@ -352,39 +244,11 @@ function History() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-                <div className={s.pagination}>
-                    <button
-                        className={s.pageBtn}
-                        onClick={() => goToPage(page - 1)}
-                        disabled={page === 1}
-                        aria-label="Page précédente"
-                    >
-                        <ChevronLeft size={16} />
-                    </button>
-
-                    {buildPageNumbers(page, totalPages).map((p, i) =>
-                        p === "…" ? (
-                            <span key={`ellipsis-${i}`} className={s.pageEllipsis}>…</span>
-                        ) : (
-                            <button
-                                key={p}
-                                className={`${s.pageBtn} ${p === page ? s.pageBtnActive : ""}`}
-                                onClick={() => goToPage(p)}
-                            >
-                                {p}
-                            </button>
-                        )
-                    )}
-
-                    <button
-                        className={s.pageBtn}
-                        onClick={() => goToPage(page + 1)}
-                        disabled={page === totalPages}
-                        aria-label="Page suivante"
-                    >
-                        <ChevronRight size={16} />
-                    </button>
-                </div>
+                <Pagination 
+                    page={page} 
+                    totalPages={totalPages} 
+                    onPageChange={goToPage} 
+                />
             )}
         </div>
     );

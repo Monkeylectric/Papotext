@@ -251,6 +251,106 @@ pub fn get_audio_base64(path: String) -> Result<String, String> {
     Ok(format!("data:{};base64,{}", mime, base64_encode(&buf)))
 }
 
+/// Export en fichier .txt
+///
+/// # Arguments
+/// * `app`      - Handle Tauri
+/// * `text`     - Texte de la transcription
+/// * `filename` - Nom suggéré pour le fichier
+///
+/// # Errors
+/// * Si la boîte de dialogue échoue
+/// * Si l'écriture du fichier échoue
+#[tauri::command]
+pub async fn export_as_txt(
+    app: tauri::AppHandle,
+    text: String,
+    filename: String,
+) -> Result<(), String> {
+    use tauri_plugin_dialog::DialogExt;
+
+    // Nom suggéré = nom du fichier audio sans extension + .txt
+    let suggested = std::path::Path::new(&filename)
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("transcription")
+        .to_string() + ".txt";
+
+    let path = app.dialog()
+        .file()
+        .set_file_name(&suggested)
+        .add_filter("Fichier texte", &["txt"])
+        .blocking_save_file();
+
+    if let Some(path) = path {
+        let path = path.into_path().map_err(|e| e.to_string())?;
+
+        std::fs::write(&path, &text)
+            .map_err(|e| e.to_string())?;
+    }
+
+    Ok(())
+}
+
+/// Export en fichier .srt
+///
+/// # Arguments
+/// * `app`      - Handle Tauri
+/// * `segments` - JSON des segments avec t0, t1, text
+/// * `filename` - Nom suggéré pour le fichier
+///
+/// # Errors
+/// * Si le parsing JSON échoue
+/// * Si la boîte de dialogue échoue
+/// * Si l'écriture du fichier échoue
+#[tauri::command]
+pub async fn export_as_srt(
+    app: tauri::AppHandle,
+    segments: String,
+    filename: String,
+) -> Result<(), String> {
+    use tauri_plugin_dialog::DialogExt;
+
+    #[derive(serde::Deserialize)]
+    struct Seg { t0: i64, t1: i64, text: String }
+
+    let segs: Vec<Seg> = serde_json::from_str(&segments)
+        .map_err(|e| e.to_string())?;
+
+    // Génération du contenu SRT
+    let mut srt = String::new();
+    for (i, seg) in segs.iter().enumerate() {
+        srt.push_str(&format!(
+            "{}\n{} --> {}\n{}\n\n",
+            i + 1,
+            cs_to_srt(seg.t0),
+            cs_to_srt(seg.t1),
+            seg.text.trim(),
+        ));
+    }
+
+    let suggested = std::path::Path::new(&filename)
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("transcription")
+        .to_string() + ".srt";
+
+    let path = app.dialog()
+        .file()
+        .set_file_name(&suggested)
+        .add_filter("Sous-titres SRT", &["srt"])
+        .blocking_save_file();
+
+    if let Some(path) = path {
+        let path = path.into_path().map_err(|e| e.to_string())?;
+        
+        std::fs::write(&path, &srt)
+            .map_err(|e| e.to_string())?;
+    }
+
+    Ok(())
+}
+
 /// Encodage base64 sans dépendance externe
 fn base64_encode(data: &[u8]) -> String {
     const CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -261,10 +361,22 @@ fn base64_encode(data: &[u8]) -> String {
         let b1 = if chunk.len() > 1 { chunk[1] as usize } else { 0 };
         let b2 = if chunk.len() > 2 { chunk[2] as usize } else { 0 };
         
-        result.push(CHARS[(b0 >> 2)] as char);
+        result.push(CHARS[b0 >> 2] as char);
         result.push(CHARS[((b0 & 3) << 4) | (b1 >> 4)] as char);
         result.push(if chunk.len() > 1 { CHARS[((b1 & 15) << 2) | (b2 >> 6)] as char } else { '=' });
         result.push(if chunk.len() > 2 { CHARS[b2 & 63] as char } else { '=' });
     }
+
     result
+}
+
+/// Conversion des centisecondes en timestamp SRT (HH:MM:SS,mmm)
+fn cs_to_srt(cs: i64) -> String {
+    let total_ms = cs * 10;
+    let ms       = total_ms % 1000;
+    let s        = (total_ms / 1000) % 60;
+    let m        = (total_ms / 60000) % 60;
+    let h        = total_ms / 3600000;
+
+    format!("{:02}:{:02}:{:02},{:03}", h, m, s, ms)
 }

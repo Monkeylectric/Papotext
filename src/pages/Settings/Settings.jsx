@@ -126,68 +126,8 @@ function Settings() {
                 <div className={s.activeModel}>
                     <Check size={14} /> Modèle actif : {selectedModel}
                 </div>
-        
-                {/* <table className={s.modelTable}>
-                    <thead>
-                        <tr>
-                            <th>Modèle</th>
-                            <th>Taille</th>
-                            <th>Description</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {MODELS.map((model) => {
-                            const isInstalled  = availableModels.includes(model.name);
-                            const isActive     = selectedModel === model.name;
-                            const isDownloading = downloading === model.name;
-                
-                            return (
-                                <tr
-                                    key={model.name}
-                                    className={`${s.modelRow} ${isActive ? s.modelRowActive : ""}`}
-                                >
-                                    <td className={s.modelLabel}>{model.label}</td>
-                                    <td className={s.modelSize}>{model.size}</td>
-                                    <td className={s.modelDesc}>{model.desc}</td>
-                                    <td>
-                                        <div className={s.modelActions}>
-                                        {isActive && (
-                                            <span className={s.badgeActive}><Check size={14} /> Actif</span>
-                                        )}
 
-                                        {!isActive && isInstalled && (
-                                            <>
-                                            <button className={s.btnUse} onClick={() => selectModel(model.name)}>
-                                                Utiliser
-                                            </button>
-                                            {model.name !== "ggml-small.bin" && (
-                                                <button className={s.btnDelete} onClick={() => setConfirmModel(model.name)}>
-                                                    <Trash2 size={15} />
-                                                </button>
-                                            )}
-                                            </>
-                                        )}
-
-                                        {!isInstalled && !isDownloading && (
-                                            <button className={s.btnDownload} onClick={() => downloadModel(model.name)}>
-                                                <Download size={15} /> Télécharger
-                                            </button>
-                                        )}
-                                        
-                                        {isDownloading && (
-                                            <span style={{ fontSize: "var(--font-size-sm)", color: "var(--color-accent)" }}>
-                                                <Loader2 size={15} className="spinning" /> {progress}%
-                                            </span>
-                                        )}
-                                        </div>
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table> */}
-
+                {/* Grille */}
                 <div className={s.modelGrid}>
                     {MODELS.map((model) => {
                         const isInstalled   = availableModels.includes(model.name);

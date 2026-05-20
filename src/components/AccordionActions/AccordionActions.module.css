@@ -1,0 +1,84 @@
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+}
+
+.btnAudio {
+    background: transparent;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
+    font-size: var(--font-size-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-md);
+}
+
+.btnAudio:hover:not(:disabled) {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+    background-color: rgba(76, 201, 240, 0.05);
+}
+
+.btnEdit {
+    background: transparent;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
+    font-size: var(--font-size-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-md);
+}
+
+.btnEdit:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+    background-color: rgba(67, 97, 238, 0.05);
+}
+
+.btnCopy {
+    background-color: var(--color-accent);
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: var(--font-size-sm);
+    padding: var(--space-sm) var(--space-md);
+}
+
+.btnCopy:hover {
+    background-color: var(--color-accent-hover);
+}
+
+.btnCancel {
+    background: transparent;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
+    font-size: var(--font-size-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-md);
+}
+
+.btnCancel:hover {
+    background: var(--color-bg-hover);
+    color: var(--color-text);
+}
+
+.btnSave {
+    background-color: var(--color-accent);
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: var(--font-size-sm);
+    padding: var(--space-sm) var(--space-md);
+}
+
+.btnSave:hover:not(:disabled) {
+    background-color: var(--color-accent-hover);
+}

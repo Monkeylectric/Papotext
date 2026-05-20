@@ -1,0 +1,51 @@
+.exportDropdown {
+    position: relative;
+}
+
+.exportBtn {
+    background: transparent;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
+    font-size: var(--font-size-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-md);
+}
+
+.exportBtn:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+    background-color: rgba(67, 97, 238, 0.05);
+}
+
+.exportMenu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    z-index: 10;
+    min-width: 120px;
+}
+
+.exportMenuItem {
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    color: var(--color-text);
+    font-size: var(--font-size-sm);
+    padding: var(--space-sm) var(--space-md);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    border-radius: 0;
+}
+
+.exportMenuItem:hover {
+    background: var(--color-bg-hover);
+    color: var(--color-accent);
+}

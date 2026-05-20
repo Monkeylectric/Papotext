@@ -122,6 +122,8 @@ pub fn run() {
             history::update_transcription,
             history::delete_transcription,
             history::get_audio_base64,
+            history::export_as_txt,
+            history::export_as_srt,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
