@@ -5,10 +5,9 @@ import ConfirmModal from "@components/ConfirmModal/ConfirmModal";
 import TranscriptionCard from "@components/TranscriptionCard/TranscriptionCard";
 import TranscriptionAccordion from "@components/TranscriptionAccordion/TranscriptionAccordion";
 import Pagination from "@components/Pagination/Pagination";
-import historyStyles from "./History.module.css";
+import style from "./History.module.css";
 
 function History() {
-    const s = historyStyles;
     const [transcriptions, setTranscriptions] = useState([]);
     const [selected, setSelected]             = useState(null);
     const [loading, setLoading]               = useState(true);
@@ -172,24 +171,24 @@ function History() {
     }
     
     if (loading) {
-        return <div className={s.loading}><Loader2 size={15} className="spinning" /> Chargement...</div>;
+        return <div className={style.loading}><Loader2 size={15} className="spinning" /> Chargement...</div>;
     }
     
     if (total === 0) {
         return (
-            <div className={s.page}>
-                <h1 className={s.pageTitle}>Historique</h1>
-                <div className={s.empty}>
-                    <div className={s.emptyIcon}><Inbox size={48} /></div>
-                    <p className={s.emptyText}>Aucune transcription</p>
-                    <p className={s.emptyDesc}>Les transcriptions apparaîtront ici.</p>
+            <div className={style.page}>
+                <h1 className={style.pageTitle}>Historique</h1>
+                <div className={style.empty}>
+                    <div className={style.emptyIcon}><Inbox size={48} /></div>
+                    <p className={style.emptyText}>Aucune transcription</p>
+                    <p className={style.emptyDesc}>Les transcriptions apparaîtront ici.</p>
                 </div>
             </div>
         );
     }
     
     return (
-        <div className={s.page}>
+        <div className={style.page}>
             {/* Modale de confirmation */}
             {confirmId !== null && (
                 <ConfirmModal
@@ -200,12 +199,12 @@ function History() {
                 />
             )}
 
-            <div className={s.pageHeader}>
-                <h1 className={s.pageTitle}>Historique</h1>
-                <span className={s.totalCount}>{total} transcription{total > 1 ? "s" : ""}</span>
+            <div className={style.pageHeader}>
+                <h1 className={style.pageTitle}>Historique</h1>
+                <span className={style.totalCount}>{total} transcription{total > 1 ? "s" : ""}</span>
             </div>
         
-            <div className={s.list}>
+            <div className={style.list}>
                 {transcriptions.map((t) => (
                     <div key={t.id}>
                         {/* Carte */}

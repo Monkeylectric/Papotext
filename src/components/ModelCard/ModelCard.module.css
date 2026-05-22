@@ -1,0 +1,124 @@
+.modelCard {
+    background-color: var(--color-bg-hover);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.modelCard:hover {
+    border-color: var(--color-accent);
+    box-shadow: var(--shadow-sm);
+}
+
+.modelCardActive {
+    border-color: var(--color-accent);
+    background-color: rgba(67, 97, 238, 0.04);
+    box-shadow: var(--shadow-sm);
+}
+
+.modelCardHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+}
+
+.modelCardTitle {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-sm);
+}
+
+.modelCardLabel {
+    font-weight: 700;
+    font-size: var(--font-size-base);
+    color: var(--color-text);
+}
+
+.modelCardSize {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+}
+
+.modelCardDesc {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    line-height: 1.5;
+    flex: 1;
+}
+
+.modelCardActions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-top: auto;
+}
+
+.downloadingLabel {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: var(--font-size-sm);
+    color: var(--color-accent);
+}
+
+/* Badge actif */
+.badgeActive {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    background-color: rgba(45, 198, 83, 0.1);
+    color: var(--color-success);
+    border-radius: var(--radius-sm);
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+}
+
+/* Boutons */
+.btnUse {
+    background-color: var(--color-accent);
+    color: white;
+    font-size: var(--font-size-sm);
+    padding: var(--space-xs) var(--space-md);
+}
+
+.btnUse:hover {
+    background-color: var(--color-accent-hover);
+}
+
+.btnDownload {
+    background-color: transparent;
+    color: var(--color-accent);
+    border: 1px solid var(--color-accent);
+    font-size: var(--font-size-sm);
+    padding: var(--space-xs) var(--space-md);
+}
+
+.btnDownload:hover {
+    background-color: rgba(67, 97, 238, 0.08);
+}
+
+.downloadLabel {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-sm);
+}
+
+.btnDelete {
+    background-color: transparent;
+    color: var(--color-danger);
+    border: 1px solid var(--color-danger);
+    font-size: var(--font-size-sm);
+    padding: var(--space-xs) var(--space-sm);
+}
+
+.btnDelete:hover {
+    background-color: rgba(230, 57, 70, 0.08);
+}

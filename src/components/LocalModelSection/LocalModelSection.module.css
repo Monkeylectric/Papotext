@@ -1,0 +1,22 @@
+.desc {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-md);
+    line-height: 1.6;
+}
+
+.btnLocal {
+    background-color: transparent;
+    color: var(--color-text);
+    border: 1px dashed var(--color-border);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-lg);
+}
+
+.btnLocal:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+    background-color: rgba(67, 97, 238, 0.04);
+}

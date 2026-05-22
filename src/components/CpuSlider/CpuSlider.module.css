@@ -1,0 +1,48 @@
+.sliderRow {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-lg);
+}
+
+.sliderLabel {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--color-text);
+    white-space: nowrap;
+    padding-top: var(--space-xs);
+}
+
+.sliderWrapper {
+    flex: 1;
+}
+
+.slider {
+    width: 100%;
+    height: 4px;
+    accent-color: var(--color-accent);
+    cursor: pointer;
+    margin-bottom: var(--space-xs);
+}
+
+.sliderTicks {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    padding: 0 2px;
+}
+
+.sliderTick {
+    transition: color var(--transition), font-weight var(--transition);
+}
+
+.sliderTickActive {
+    color: var(--color-accent);
+    font-weight: 600;
+}
+
+.sliderHint {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    margin-top: var(--space-md);
+}

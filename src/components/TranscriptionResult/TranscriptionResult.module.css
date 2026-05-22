@@ -1,0 +1,36 @@
+.result {
+    margin-top: var(--space-lg);
+}
+
+.resultHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-md);
+}
+
+.resultText {
+    background-color: var(--color-bg-hover);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+    line-height: 1.8;
+    color: var(--color-text);
+    font-size: var(--font-size-base);
+    white-space: pre-wrap;
+}
+
+.btnCopy {
+    background-color: transparent;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
+    font-size: var(--font-size-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.btnCopy:hover {
+    background-color: var(--color-bg-hover);
+    color: var(--color-text);
+}

@@ -2,11 +2,13 @@ import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { listen } from "@tauri-apps/api/event";
-import { FileAudio, Mic, Square, Copy, Check, Sparkles, Loader2, AlertCircle } from "lucide-react";
-import mainStyles from "./Main.module.css";
+import { AlertCircle } from "lucide-react";
+import TranslateToggle from "@components/TranslateToggle/TranslateToggle";
+import FileTranscription from "@components/FileTranscription/FileTranscription";
+import LiveTranscription from "@components/LiveTranscription/LiveTranscription";
+import style from "./Main.module.css";
 
 function Main() {
-    const s = mainStyles;
     const [audioPath, setAudioPath]         = useState("");
     const [transcription, setTranscription] = useState("");
     const [loading, setLoading]             = useState(false);
@@ -180,101 +182,36 @@ function Main() {
     }
     
     return (
-        <div className={s.page}>
-            <div className={s.pageHeader}>
-                <h1 className={s.pageTitle}>Transcription Audio</h1>
+        <div className={style.page}>
+            <div className={style.pageHeader}>
+                <h1 className={style.pageTitle}>Transcription Audio</h1>
 
-                <div className={s.translateToggle}>
-                    <label className={s.toggleLabel}>
-                        <div
-                            className={`${s.toggle} ${translateMode ? s.toggleActive : ""}`}
-                            onClick={() => setTranslateMode(t => !t)}
-                        >
-                            <div className={s.toggleThumb} />
-                        </div>
-                        <span>Traduire en anglais</span>
-                    </label>
-                </div>
+                <TranslateToggle value={translateMode} onChange={setTranslateMode} />
             </div>
         
             {/* Section fichier */}
-            <div className={s.section}>
-                <h2 className={s.sectionTitle}><FileAudio size={16} /> Depuis un fichier</h2>
-                <div className={s.fileArea}>
-                    <button className={s.btnPrimary} onClick={selectFile}>
-                        Choisir un fichier audio
-                    </button>
-                    {audioPath && (
-                        <div className={s.fileSelected}>
-                            <FileAudio size={15} /> {audioPath.split("\\").pop().split("/").pop()}
-                        </div>
-                    )}
-                    <button
-                        className={s.btnPrimary}
-                        onClick={transcribe}
-                        disabled={!audioPath || loading}
-                    >
-                        {loading ? <><Loader2 size={15} className="spinning" /> Transcription en cours...</> : <><Sparkles size={16} /> Transcrire</>}
-                    </button>
-                    {progress && (
-                        <div className={s.progressWrapper}>
-                            <div className={s.progressLabel}>
-                                <span>Segment {progress.segment} / {progress.total}</span>
-                                <span>{progress.percent}%</span>
-                            </div>
-                            <progress value={progress.percent} max="100" />
-                        </div>
-                    )}
-                </div>
-        
-                {transcription && (
-                    <div className={s.result}>
-                        <div className={s.resultHeader}>
-                            <h3>Résultat</h3>
-                            <button className={s.btnCopy} onClick={() => copyFileText(transcription)}>
-                                {copiedFile ? <><Check size={14} /> Copié !</> : <><Copy size={14} /> Copier</>}
-                            </button>
-                        </div>
-                        <div className={s.resultText}>{transcription}</div>
-                    </div>
-                )}
-            </div>
+            <FileTranscription
+                audioPath={audioPath}
+                transcription={transcription}
+                loading={loading}
+                progress={progress}
+                copied={copiedFile}
+                onSelectFile={selectFile}
+                onTranscribe={transcribe}
+                onCopy={copyFileText}
+            />
         
             {/* Section enregistrement */}
-            <div className={s.section}>
-                <h2 className={s.sectionTitle}><Mic size={16} /> En direct</h2>
-                <div className={s.fileArea}>
-                {!recording ? (
-                    <button className={s.btnRecord} onClick={startRecording}>
-                        <Mic size={16} /> Démarrer l'enregistrement
-                    </button>
-                ) : (
-                    <>
-                        <button className={s.btnStop} onClick={stopRecording}>
-                            <Square size={16} /> Arrêter
-                        </button>
-                        <div className={s.recordingBadge}>
-                            <span className={s.recordingDot} />
-                            Enregistrement en cours...
-                        </div>
-                    </>
-                )}
-                </div>
+            <LiveTranscription
+                recording={recording}
+                liveText={liveText}
+                copied={copiedLive}
+                onStart={startRecording}
+                onStop={stopRecording}
+                onCopy={copyLiveText}
+            />
         
-                {liveText && (
-                <div className={s.result}>
-                    <div className={s.resultHeader}>
-                        <h3>Transcription en direct</h3>
-                        <button className={s.btnCopy} onClick={() => copyLiveText(liveText)}>
-                            {copiedLive ? <><Check size={14} /> Copié !</> : <><Copy size={14} /> Copier</>}
-                        </button>
-                    </div>
-                    <div className={s.resultText}>{liveText}</div>
-                </div>
-                )}
-            </div>
-        
-            {error && <div className={s.error}><AlertCircle size={15} /> {error}</div>}
+            {error && <div className={style.error}><AlertCircle size={15} /> {error}</div>}
         </div>
     );
 }

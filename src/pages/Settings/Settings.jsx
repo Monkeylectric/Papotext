@@ -2,9 +2,12 @@ import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { listen } from "@tauri-apps/api/event";
-import { Download, Trash2, Check, FolderOpen, AlertCircle, Loader2 } from "lucide-react";
-import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
-import settingsStyles from "./Settings.module.css";
+import { Check, AlertCircle } from "lucide-react";
+import ConfirmModal from "@components/ConfirmModal/ConfirmModal";
+import ModelCard from "@components/ModelCard/ModelCard";
+import LocalModelSection from "@components/LocalModelSection/LocalModelSection";
+import CpuSlider from "@components/CpuSlider/CpuSlider";
+import style from "./Settings.module.css";
 
 const MODELS = [
     { name: "ggml-tiny.bin",   label: "Tiny",   size: "75 Mo",   desc: "Rapide, configs limitées" },
@@ -15,7 +18,6 @@ const MODELS = [
 ]
 
 function Settings() {
-    const s = settingsStyles;
     const [selectedModel, setSelectedModel]     = useState("");
     const [availableModels, setAvailableModels] = useState([]);
     const [downloading, setDownloading]         = useState(null);
@@ -105,7 +107,7 @@ function Settings() {
     }
     
     return (
-        <div className={s.page}>
+        <div className={style.page}>
             {/* Modale de confirmation */}
             {confirmModel && (
                 <ConfirmModal
@@ -116,77 +118,41 @@ function Settings() {
                 />
             )}
 
-            <h1 className={s.pageTitle}>Paramètres</h1>
+            <h1 className={style.pageTitle}>Paramètres</h1>
         
             {/* Modèles */}
-            <div className={s.section}>
-                <h2 className={s.sectionTitle}>Modèle de transcription</h2>
-                <p className={s.sectionDesc}>Le modèle détermine la qualité et la vitesse de transcription.</p>
+            <div className={style.section}>
+                <h2 className={style.sectionTitle}>Modèle de transcription</h2>
+                <p className={style.sectionDesc}>Le modèle détermine la qualité et la vitesse de transcription.</p>
         
-                <div className={s.activeModel}>
+                <div className={style.activeModel}>
                     <Check size={14} /> Modèle actif : {selectedModel}
                 </div>
 
                 {/* Grille */}
-                <div className={s.modelGrid}>
+                <div className={style.modelGrid}>
                     {MODELS.map((model) => {
-                        const isInstalled   = availableModels.includes(model.name);
-                        const isActive      = selectedModel === model.name;
-                        const isDownloading = downloading === model.name;
-
                         return (
-                            <div
-                                key={model.name}
-                                className={`${s.modelCard} ${isActive ? s.modelCardActive : ""}`}
-                            >
-                                <div className={s.modelCardHeader}>
-                                    <div className={s.modelCardTitle}>
-                                        <span className={s.modelCardLabel}>{model.label}</span>
-                                        <span className={s.modelCardSize}>{model.size}</span>
-                                    </div>
-                                    {isActive && (
-                                        <span className={s.badgeActive}>
-                                            <Check size={13} /> Actif
-                                        </span>
-                                    )}
-                                </div>
-
-                                <p className={s.modelCardDesc}>{model.desc}</p>
-
-                                <div className={s.modelCardActions}>
-                                    {!isActive && isInstalled && (
-                                        <>
-                                            <button className={s.btnUse} onClick={() => selectModel(model.name)}>
-                                                Utiliser
-                                            </button>
-                                            {model.name !== "ggml-small.bin" && (
-                                                <button className={s.btnDelete} onClick={() => setConfirmModel(model.name)}>
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            )}
-                                        </>
-                                    )}
-                                    {!isInstalled && !isDownloading && (
-                                        <button className={s.btnDownload} onClick={() => downloadModel(model.name)}>
-                                            <Download size={14} /> Télécharger
-                                        </button>
-                                    )}
-                                    {isDownloading && (
-                                        <span className={s.downloadingLabel}>
-                                            <Loader2 size={14} className="spinning" /> {progress}%
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
+                            <ModelCard 
+                                key={model.name} 
+                                model={model} 
+                                isActive={selectedModel === model.name} 
+                                isInstalled={availableModels.includes(model.name)} 
+                                isDownloading={downloading === model.name} 
+                                progress={progress} 
+                                onUse={() => selectModel(model.name)} 
+                                onDelete={() => setConfirmModel(model.name)} 
+                                onDownload={() => downloadModel(model.name)}
+                            />
                         );
                     })}
                 </div>
         
                 {downloading && (
-                <div className={s.downloadProgress}>
-                    <div className={s.downloadLabel}>
+                <div className={style.downloadProgress}>
+                    <div className={style.downloadLabel}>
                         <span>Téléchargement de {downloading}...</span>
-                        <span className={s.downloadPercent}>{progress}%</span>
+                        <span className={style.downloadPercent}>{progress}%</span>
                     </div>
                     <progress value={progress} max="100" />
                 </div>
@@ -196,55 +162,20 @@ function Settings() {
             </div>
         
             {/* Modèle local */}
-            <div className={s.section}>
-                <h2 className={s.sectionTitle}>Modèle local</h2>
-                <p className={s.localModelDesc}>
-                    Tu peux télécharger manuellement un modèle depuis <a href="https://huggingface.co/ggerganov/whisper.cpp" target="_blank">HuggingFace</a> et le sélectionner ici.
-                </p>
-                <button className={s.btnLocal} onClick={selectLocalFile}>
-                    <FolderOpen size={16} /> Sélectionner un fichier .bin local
-                </button>
+            <div className={style.section}>
+                <h2 className={style.sectionTitle}>Modèle local</h2>
+                <LocalModelSection onSelectFile={selectLocalFile} />
             </div>
 
             {/* Performances */}
-            <div className={s.section}>
-                <h2 className={s.sectionTitle}>Performances</h2>
-                <p className={s.sectionDesc}>
+            <div className={style.section}>
+                <h2 className={style.sectionTitle}>Performances</h2>
+                <p className={style.sectionDesc}>
                     Ajustez l'utilisation du CPU pendant la transcription.
                     Une valeur plus basse laisse la machine plus réactive.
                 </p>
 
-                <div className={s.sliderRow}>
-                    <span className={s.sliderLabel}>Utilisation CPU</span>
-                    <div className={s.sliderWrapper}>
-                        <input
-                            type="range"
-                            min="25"
-                            max="100"
-                            step="25"
-                            value={cpuUsage}
-                            onChange={e => updateCpuUsage(Number(e.target.value))}
-                            className={s.slider}
-                        />
-                        <div className={s.sliderTicks}>
-                            {[25, 50, 75, 100].map(v => (
-                                <span
-                                    key={v}
-                                    className={`${s.sliderTick} ${cpuUsage === v ? s.sliderTickActive : ""}`}
-                                >
-                                    {v}%
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
-                <p className={s.sliderHint}>
-                    {cpuUsage === 25  && "🐢 Lent — machine très réactive"}
-                    {cpuUsage === 50  && "⚖️ Équilibré — bon compromis"}
-                    {cpuUsage === 75  && "⚡ Rapide — recommandé"}
-                    {cpuUsage === 100 && "🚀 Maximum — transcription la plus rapide"}
-                </p>
+                <CpuSlider value={cpuUsage} onChange={updateCpuUsage} />
             </div>
         </div>
     );
