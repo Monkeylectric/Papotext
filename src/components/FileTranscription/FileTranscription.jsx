@@ -1,8 +1,8 @@
-import { FileAudio, Sparkles, Loader2 } from "lucide-react";
+import { FileAudio, Sparkles, Loader2, X } from "lucide-react";
 import TranscriptionResult from "@components/TranscriptionResult/TranscriptionResult";
 import style from "./FileTranscription.module.css";
 
-function FileTranscription({ audioPath, transcription, loading, progress, copied, onSelectFile, onTranscribe, onCopy }) {
+function FileTranscription({ audioPath, transcription, loading, progress, copied, onSelectFile, onTranscribe, isCancelling, onCancel, onCopy }) {
     return (
         <div className={style.section}>
             <h2 className={style.sectionTitle}><FileAudio size={16} /> Depuis un fichier</h2>
@@ -24,6 +24,15 @@ function FileTranscription({ audioPath, transcription, loading, progress, copied
                         : <><Sparkles size={16} /> Transcrire</>
                     }
                 </button>
+
+                {loading && (
+                    <button className={style.btnCancel} onClick={onCancel} disabled={isCancelling}>
+                        {isCancelling
+                            ? <><Loader2 size={15} className="spinning" /> Annulation en cours...</>
+                            : <><X size={15} /> Annuler</>
+                        }
+                    </button>
+                )}
 
                 {progress && (
                     <div className={style.progressWrapper}>

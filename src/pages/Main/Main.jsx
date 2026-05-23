@@ -8,7 +8,7 @@ import FileTranscription from "@components/FileTranscription/FileTranscription";
 import LiveTranscription from "@components/LiveTranscription/LiveTranscription";
 import style from "./Main.module.css";
 
-function Main({ isTranscribing, onTranscribingChange, transcriptionProgress, onProgressChange, transcriptionError, onErrorChange }) {
+function Main({ isTranscribing, onTranscribingChange, transcriptionProgress, onProgressChange, isCancelling, onCancel, transcriptionError, onErrorChange }) {
     const [audioPath, setAudioPath]         = useState("");
     const [transcription, setTranscription] = useState("");
     const [recording, setRecording]         = useState(false);
@@ -203,6 +203,8 @@ function Main({ isTranscribing, onTranscribingChange, transcriptionProgress, onP
                 onSelectFile={selectFile}
                 onTranscribe={transcribe}
                 onCopy={copyFileText}
+                isCancelling={isCancelling}
+                onCancel={onCancel}
             />
         
             {/* Section enregistrement */}

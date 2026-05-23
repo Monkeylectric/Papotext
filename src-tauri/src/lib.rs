@@ -1,5 +1,5 @@
 use tauri::Manager;
-use std::sync::{Mutex, Arc};
+use std::sync::{Mutex, Arc, atomic};
 use rusqlite::Connection;
 use whisper_rs::{WhisperContext, WhisperContextParameters};
 
@@ -69,6 +69,7 @@ pub struct AppState {
     pub cpu_usage: Mutex<u32>,                      // Pourcentage CPU choisi par l'utilisateur
     pub db: Mutex<Connection>,                      // Connexion SQLite partagée
     pub is_transcribing: Mutex<bool>,               // Verrou contre les transcriptions concurrentes
+    pub is_cancelled: Arc<atomic::AtomicBool>,      // Annulation d'une transcription en cours
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -93,6 +94,7 @@ pub fn run() {
                 cpu_usage: Mutex::new(75),          // Utilisation du CPU à 75%
                 db: Mutex::new(conn),               // Stockage de la connexion SQLite
                 is_transcribing: Mutex::new(false), // Aucune transcription en cours
+                is_cancelled: Arc::new(atomic::AtomicBool::new(false)), // Aucune annulation
             });
 
             Ok(())
@@ -107,6 +109,7 @@ pub fn run() {
             // Audio
             audio::transcribe_audio,
             audio::transcribe_chunk,
+            audio::cancel_transcription,
             // Settings
             settings::get_selected_model,
             settings::set_selected_model,

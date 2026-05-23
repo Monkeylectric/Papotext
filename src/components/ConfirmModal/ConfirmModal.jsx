@@ -1,7 +1,7 @@
 import { Trash2 } from "lucide-react";
 import styles from "./ConfirmModal.module.css";
 
-function ConfirmModal({ title, message, onConfirm, onCancel }) {
+function ConfirmModal({ title, message, onConfirm, onCancel, confirmLabel = "Supprimer" }) {
     return (
         <div className={styles.overlay} onClick={onCancel}>
             <div className={styles.modal} onClick={e => e.stopPropagation()}>
@@ -15,7 +15,7 @@ function ConfirmModal({ title, message, onConfirm, onCancel }) {
                         Annuler
                     </button>
                     <button className={styles.btnConfirm} onClick={onConfirm}>
-                        Supprimer
+                        {confirmLabel}
                     </button>
                 </div>
             </div>

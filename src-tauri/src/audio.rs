@@ -387,6 +387,7 @@ async fn transcribe_segment_async(
     ctx_arc: std::sync::Arc<std::sync::Mutex<WhisperContext>>,
     translate: bool,
     threads_per_segment: i32,
+    is_cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>,
 ) -> Result<(String, Vec<Segment>), String> {
     // Création du fichier temporaire
     let temp_path = std::env::temp_dir()
@@ -462,6 +463,10 @@ async fn transcribe_segment_async(
         let mut segments: Vec<Segment> = Vec::new();
 
         for i in 0..n {
+            if is_cancelled.load(std::sync::atomic::Ordering::SeqCst) {
+                break;
+            }
+
             if let Some(seg) = whisper_state.get_segment(i) {
                 let t0 = seg.start_timestamp() + (start * 100.0) as i64;
                 let t1 = seg.end_timestamp() + (start * 100.0) as i64;
@@ -559,6 +564,9 @@ async fn transcribe_short(
     selected_model: String,
     translate: bool,
 ) -> Result<String, String> {
+    // Réinitialisation du flag d'annulation
+    state.is_cancelled.store(false, std::sync::atomic::Ordering::SeqCst);
+
     // Nombre de threads CPU utilisables
     let threads_per_segment = *state.threads_per_segment.lock()
         .map_err(|e| e.to_string())?;
@@ -700,6 +708,10 @@ pub async fn transcribe_audio_inner(
     state: tauri::State<'_, AppState>,
     translate: bool,
 ) -> Result<String, String> {
+    // Réinitialisation du flag d'annulation
+    state.is_cancelled.store(false, std::sync::atomic::Ordering::SeqCst);
+    let is_cancelled = state.is_cancelled.clone();
+
     // Charge le pool Whisper.
     load_pool(&app, &state)?;
 
@@ -739,7 +751,7 @@ pub async fn transcribe_audio_inner(
         pool.contexts.iter().cloned().collect::<Vec<_>>()
     };
 
-    let app_arc        = std::sync::Arc::new(app.clone());
+    let app_arc = std::sync::Arc::new(app.clone());
     let audio_path_arc = std::sync::Arc::new(audio_path.clone());
 
     // Futures parallèles
@@ -753,6 +765,7 @@ pub async fn transcribe_audio_inner(
         let ctx_arc = ctx_arcs[i % ctx_arcs.len()].clone();
         let start = *start;
         let end = *end;
+        let is_cancelled_clone = is_cancelled.clone();
 
         // Ajout d'une tâche async au scheduler
         futures.push(tokio::spawn(async move {
@@ -765,6 +778,7 @@ pub async fn transcribe_audio_inner(
                 ctx_arc,
                 translate,
                 threads_per_segment,
+                is_cancelled_clone,
             ).await?;
 
             Ok::<(usize, String, Vec<Segment>), String>((i, text.0, text.1))
@@ -775,18 +789,21 @@ pub async fn transcribe_audio_inner(
     let mut results = Vec::new();
 
     while let Some(handle_result) = futures.next().await {
-        // Résultat de la tâche Tokio
+        // Vérification du flag d'annulation entre chaque segment
+        if state.is_cancelled.load(std::sync::atomic::Ordering::SeqCst) {
+            futures.clear(); // Abandonne les futures restantes
+
+            return Err("Transcription annulée".to_string());
+        }
+
         let join_result: Result<Result<(usize, String, Vec<Segment>), String>, _> = handle_result;
         let (i, text, segs) = join_result.map_err(|e: tokio::task::JoinError| e.to_string())??;
-        // Sauvegarde du résultat
+
         results.push((i, text.clone(), segs));
 
-        // Nombre de segments déjà terminés
         let completed = results.len();
-        // Calcul de la progression
         let percent = (completed as f64 / n_total as f64 * 100.0) as u32;
 
-        // Emission de la progression
         app.emit("transcription_progress", serde_json::json!({
             "percent": percent,
             "segment": i + 1,
@@ -824,6 +841,12 @@ pub async fn transcribe_audio_inner(
     let _ = save_transcription(state, filename, audio_path.clone(), full_text.trim().to_string(), selected_model, segments_json);
 
     Ok(full_text.trim().to_string())
+}
+
+
+#[tauri::command]
+pub fn cancel_transcription(state: tauri::State<'_, AppState>) {
+    state.is_cancelled.store(true, std::sync::atomic::Ordering::SeqCst);
 }
 
 /// Transcription temps réel

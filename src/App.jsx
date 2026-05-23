@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { Mic, ClipboardList, Settings as SettingsLucid, Sun, Moon, Loader2 } from "lucide-react";
 import Main from "@pages/Main/Main";
 import History from "@pages/History/History";
 import Settings from "@pages/Settings/Settings";
+import ConfirmModal from "@components/ConfirmModal/ConfirmModal";
 import styles from "./App.module.css";
 
 function App() {
@@ -13,6 +15,8 @@ function App() {
     const [isTranscribing, setIsTranscribing]               = useState(false);
     const [transcriptionProgress, setTranscriptionProgress] = useState(null);
     const [transcriptionError, setTranscriptionError]       = useState("");
+    const [showCancelConfirm, setShowCancelConfirm]         = useState(false);
+    const [isCancelling, setIsCancelling]                   = useState(false);
     
     useEffect(() => {
         if (theme === "auto") {
@@ -31,6 +35,16 @@ function App() {
             return "light";
         });
     }
+
+    async function cancelTranscription() {
+        setIsCancelling(true);
+
+        await invoke("cancel_transcription");
+
+        setIsTranscribing(false);
+        setTranscriptionProgress(null);
+        setIsCancelling(false);
+    }
     
     const isDark = theme === "dark" ||
         (theme === "auto" && window.matchMedia("(prefers-color-scheme: dark)").matches);
@@ -43,6 +57,19 @@ function App() {
     
     return (
         <div className={styles.app}>
+            {showCancelConfirm && (
+                <ConfirmModal
+                    title="Annuler la transcription ?"
+                    message="La transcription en cours sera interrompue. Le texte déjà transcrit ne sera pas sauvegardé."
+                    onConfirm={() => {
+                        setShowCancelConfirm(false);
+                        cancelTranscription();
+                    }}
+                    onCancel={() => setShowCancelConfirm(false)}
+                    confirmLabel="Annuler la transcription"
+                />
+            )}
+
             {/* Sidebar */}
             <aside className={styles.sidebar}>
                 <div className={styles.sidebarTitle}>
@@ -91,6 +118,8 @@ function App() {
                         onTranscribingChange={setIsTranscribing}
                         transcriptionProgress={transcriptionProgress}
                         onProgressChange={setTranscriptionProgress}
+                        isCancelling={isCancelling}
+                        onCancel={() => setShowCancelConfirm(true)}
                         transcriptionError={transcriptionError}
                         onErrorChange={setTranscriptionError}
                     />
