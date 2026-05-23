@@ -127,6 +127,7 @@ pub fn run() {
             history::get_audio_base64,
             history::export_as_txt,
             history::export_as_srt,
+            history::get_history_stats,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

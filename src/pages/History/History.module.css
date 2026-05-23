@@ -6,7 +6,8 @@
 
 .pageHeader {
     display: flex;
-    align-items: baseline;
+    flex-direction: column;
+    align-items: flex-start;
     gap: var(--space-md);
     margin-bottom: var(--space-xl);
 }

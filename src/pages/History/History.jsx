@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { Copy, Inbox, Loader2, Save } from "lucide-react";
 import ConfirmModal from "@components/ConfirmModal/ConfirmModal";
+import HistoryStats from "@components/HistoryStats/HistoryStats";
 import TranscriptionCard from "@components/TranscriptionCard/TranscriptionCard";
 import TranscriptionAccordion from "@components/TranscriptionAccordion/TranscriptionAccordion";
 import Pagination from "@components/Pagination/Pagination";
@@ -201,7 +202,7 @@ function History() {
 
             <div className={style.pageHeader}>
                 <h1 className={style.pageTitle}>Historique</h1>
-                <span className={style.totalCount}>{total} transcription{total > 1 ? "s" : ""}</span>
+                <HistoryStats />
             </div>
         
             <div className={style.list}>

@@ -77,7 +77,7 @@ function Main({ isTranscribing, onTranscribingChange, transcriptionProgress, onP
     async function selectFile() {
         const selected = await open({
             multiple: false,
-            filters: [{ name: "Audio", extensions: ["wav", "mp3"] }],
+            filters: [{ name: "Audio", extensions: ["wav", "mp3", "ogg", "flac", "m4a"] }],
         });
 
         if (selected) {

@@ -26,6 +26,14 @@ pub struct TranscriptionPage {
     page_size: i64,            // Nombre d'éléments par page
 }
 
+/// Structure des statistiques de l'historique
+#[derive(serde::Serialize)]
+pub struct HistoryStats {
+    pub total: i64,
+    pub top_model: Option<String>,
+    pub latest_filename: Option<String>,
+}
+
 /// Initialisation de la base SQLite
 /// 
 /// # Arguments
@@ -349,6 +357,38 @@ pub async fn export_as_srt(
     }
 
     Ok(())
+}
+
+/// Récuperation des statistiques des transcriptions
+///
+/// # Arguments
+/// * `state` - État global de l'application
+/// 
+/// # Returns
+/// Les statistiques des transcriptions
+///
+/// # Errors
+/// * Si le verouillage de la connexion échoue
+/// * Si la requête sqlite échoue
+#[tauri::command]
+pub fn get_history_stats(state: tauri::State<AppState>) -> Result<HistoryStats, String> {
+    let db = state.db.lock().map_err(|e| e.to_string())?;
+
+    let total: i64 = db.query_row(
+        "SELECT COUNT(*) FROM transcriptions", [], |row| row.get(0)
+    ).map_err(|e| e.to_string())?;
+
+    let top_model: Option<String> = db.query_row(
+        "SELECT model FROM transcriptions GROUP BY model ORDER BY COUNT(*) DESC LIMIT 1",
+        [], |row| row.get(0)
+    ).ok();
+
+    let latest_filename: Option<String> = db.query_row(
+        "SELECT filename FROM transcriptions ORDER BY created_at DESC LIMIT 1",
+        [], |row| row.get(0)
+    ).ok();
+
+    Ok(HistoryStats { total, top_model, latest_filename })
 }
 
 /// Encodage base64 sans dépendance externe
