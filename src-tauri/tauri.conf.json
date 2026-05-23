@@ -13,8 +13,9 @@
     "windows": [
       {
         "title": "papotext",
-        "width": 1000,
-        "height": 800
+        "width": 1400,
+        "height": 900,
+        "maximized": true
       }
     ],
     "security": {

@@ -8,16 +8,13 @@ import FileTranscription from "@components/FileTranscription/FileTranscription";
 import LiveTranscription from "@components/LiveTranscription/LiveTranscription";
 import style from "./Main.module.css";
 
-function Main() {
+function Main({ isTranscribing, onTranscribingChange, transcriptionProgress, onProgressChange, transcriptionError, onErrorChange }) {
     const [audioPath, setAudioPath]         = useState("");
     const [transcription, setTranscription] = useState("");
-    const [loading, setLoading]             = useState(false);
-    const [error, setError]                 = useState("");
     const [recording, setRecording]         = useState(false);
     const [liveText, setLiveText]           = useState("");
     const [copiedFile, setCopiedFile]       = useState(false);
     const [copiedLive, setCopiedLive]       = useState(false);
-    const [progress, setProgress]           = useState(null);
     const [translateMode, setTranslateMode] = useState(false);
     const mediaRecorderRef                  = useRef(null);
     const chunkIntervalRef                  = useRef(null);
@@ -25,6 +22,13 @@ function Main() {
     const segmentsRef                       = useRef({});
     const receivedCountRef                  = useRef(0);
     const promptTokensRef                   = useRef([]);
+
+    const loading     = isTranscribing;
+    const setLoading  = onTranscribingChange;
+    const progress    = transcriptionProgress;
+    const setProgress = onProgressChange;
+    const error       = transcriptionError;
+    const setError    = onErrorChange;
     
     useEffect(() => {
         const unlisten = listen("transcription_chunk", (event) => {
@@ -84,7 +88,7 @@ function Main() {
     }
     
     async function transcribe() {
-        if (!audioPath) return;
+        if (!audioPath || isTranscribing) return;
 
         setLoading(true);
         setError("");

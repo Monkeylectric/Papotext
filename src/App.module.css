@@ -91,3 +91,24 @@
     overflow-y: auto;
     padding: var(--space-2xl);
 }
+
+/* Badge */
+.navBadge {
+    margin-left: auto;
+    color: var(--color-accent);
+    display: flex;
+    align-items: center;
+}
+
+.transcribingBanner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin: var(--space-sm) var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    background-color: rgba(67, 97, 238, 0.08);
+    border: 1px solid rgba(67, 97, 238, 0.2);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+    color: var(--color-accent);
+}
