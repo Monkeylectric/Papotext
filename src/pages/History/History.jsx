@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { Copy, Inbox, Loader2, Save } from "lucide-react";
+import { Copy, Inbox, Loader2, Save, Search, X } from "lucide-react";
 import ConfirmModal from "@components/ConfirmModal/ConfirmModal";
 import HistoryStats from "@components/HistoryStats/HistoryStats";
 import TranscriptionCard from "@components/TranscriptionCard/TranscriptionCard";
@@ -24,13 +24,14 @@ function History() {
     const [activeSegIdx, setActiveSegIdx]     = useState(-1);
     const [loadingAudio, setLoadingAudio]     = useState(false);
     const [exportOpenId, setExportOpenId]     = useState(null);
+    const [searchQuery, setSearchQuery]       = useState("");
     const textareaRef                         = useRef(null);
     const audioRef                            = useRef(null);
 
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
     
     useEffect(() => {
-        loadHistory(page);
+        loadHistory(page, searchQuery);
     }, [page]);
 
     // Focus automatique et curseur en fin de texte à l'ouverture de l'éditeur
@@ -42,6 +43,16 @@ function History() {
             el.setSelectionRange(el.value.length, el.value.length);
         }
     }, [editingId]);
+
+    // Recharge l'historique à la modification du champs de recherche
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setPage(1);
+            loadHistory(1, searchQuery);
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
 
     async function loadAudio(t, e) {
         e.stopPropagation();
@@ -81,11 +92,14 @@ function History() {
         setActiveSegIdx(idx);
     }
     
-    async function loadHistory(p) {
+    async function loadHistory(p, q = searchQuery) {
         setLoading(true);
 
         try {
-            const result = await invoke("get_transcriptions", { page: p });
+            const result = await invoke("get_transcriptions", {
+                page: p,
+                query: q || null,
+            });
 
             setTranscriptions(result.items);
             setTotal(result.total);
@@ -203,6 +217,22 @@ function History() {
             <div className={style.pageHeader}>
                 <h1 className={style.pageTitle}>Historique</h1>
                 <HistoryStats />
+            </div>
+
+            <div className={style.searchWrapper}>
+                <Search size={15} />
+                <input
+                    type="text"
+                    className={style.searchInput}
+                    placeholder="Rechercher par nom de fichier ou contenu..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                />
+                {searchQuery && (
+                    <button className={style.searchClear} onClick={() => setSearchQuery("")}>
+                        <X size={14} />
+                    </button>
+                )}
             </div>
         
             <div className={style.list}>

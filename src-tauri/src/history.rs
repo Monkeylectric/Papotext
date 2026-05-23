@@ -140,7 +140,8 @@ pub fn save_transcription(
 #[tauri::command]
 pub fn get_transcriptions(
     state: tauri::State<AppState>,
-    page: i64
+    page: i64,
+    query: Option<String>,
 ) -> Result<TranscriptionPage, String> {
     let db = state.db.lock()
         .map_err(|e| e.to_string())?;
@@ -149,23 +150,33 @@ pub fn get_transcriptions(
     let page = page.max(1);
     let offset = (page - 1) * PAGE_SIZE;
 
+    let (count_sql, items_sql) = match &query {
+        Some(_) => (
+            "SELECT COUNT(*) FROM transcriptions WHERE filename LIKE ?1 OR text LIKE ?1",
+            "SELECT id, filename, audio_path, text, model, created_at, segments 
+            FROM transcriptions WHERE filename LIKE ?1 OR text LIKE ?1
+            ORDER BY created_at DESC LIMIT ?2 OFFSET ?3"
+        ),
+        None => (
+            "SELECT COUNT(*) FROM transcriptions",
+            "SELECT id, filename, audio_path, text, model, created_at, segments 
+            FROM transcriptions ORDER BY created_at DESC LIMIT ?1 OFFSET ?2"
+        ),
+    };
+
+    let pattern = query.as_deref().map(|q| format!("%{}%", q));
+
     // Nombre total de transcriptions
-    let total: i64 = db.query_row(
-        "SELECT COUNT(*) FROM transcriptions",
-        [],
-        |row| row.get(0),
-    ).map_err(|e| e.to_string())?;
+    let total: i64 = match &pattern {
+        Some(p) => db.query_row(count_sql, rusqlite::params![p], |row| row.get(0)),
+        None    => db.query_row(count_sql, [], |row| row.get(0)),
+    }.map_err(|e| e.to_string())?;
 
     // Requête paginée
-    let mut stmt = db.prepare(
-        "SELECT id, filename, audio_path, text, model, created_at, segments 
-        FROM transcriptions 
-        ORDER BY created_at DESC
-        LIMIT ?1 OFFSET ?2"
-    ).map_err(|e| e.to_string())?;
+    let mut stmt = db.prepare(items_sql).map_err(|e| e.to_string())?;
 
     // Exécution de la requête
-    let items = stmt.query_map(rusqlite::params![PAGE_SIZE, offset], |row| {
+    let mapper = |row: &rusqlite::Row| {
         Ok(Transcription {
             id: row.get(0)?,
             filename: row.get(1)?,
@@ -175,8 +186,12 @@ pub fn get_transcriptions(
             created_at: row.get(5)?,
             segments: row.get(6)?,
         })
-    })
-    .map_err(|e| e.to_string())?
+    };
+
+    let items: Vec<Transcription> = match &pattern {
+        Some(p) => stmt.query_map(rusqlite::params![p, PAGE_SIZE, offset], mapper),
+        None    => stmt.query_map(rusqlite::params![PAGE_SIZE, offset], mapper),
+    }.map_err(|e| e.to_string())?
     .filter_map(|r| r.ok())
     .collect();
 
