@@ -138,9 +138,13 @@ pub async fn convert_to_wav_16k(
 
     // Vérifier que ffmpeg a réussi
     if !ffmpeg_result.status.success() {
-        return Err(format!(
-            "ffmpeg a échoué : {}",
-        String::from_utf8_lossy(&ffmpeg_result.stderr)));
+        let stderr = String::from_utf8_lossy(&ffmpeg_result.stderr);
+        let detail = stderr.lines()
+            .filter(|l| l.contains("Error") || l.contains("Invalid") || l.contains("No such file"))
+            .last()
+            .unwrap_or("erreur inconnue");
+
+        return Err(format!("Impossible de lire le fichier audio : {}", detail));
     }
 
     Ok(output)
@@ -418,7 +422,13 @@ async fn transcribe_segment_async(
         .map_err(|e| e.to_string())?;
 
     if !ffmpeg_result.status.success() {
-        return Err(format!("ffmpeg segment {} échoué", index));
+        let stderr = String::from_utf8_lossy(&ffmpeg_result.stderr);
+        let detail = stderr.lines()
+            .filter(|l| l.contains("Error") || l.contains("Invalid"))
+            .last()
+            .unwrap_or("erreur inconnue");
+
+        return Err(format!("Erreur sur le segment {} : {}", index + 1, detail));
     }
 
     let temp_path_clone = temp_path.clone();
@@ -930,10 +940,13 @@ pub async fn transcribe_chunk(
         .map_err(|e| e.to_string())?;
 
     if !output.status.success() {
-        return Err(format!(
-            "ffmpeg a échoué : {}",
-            String::from_utf8_lossy(&output.stderr)
-        ));
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let detail = stderr.lines()
+            .filter(|l| l.contains("Error") || l.contains("Invalid"))
+            .last()
+            .unwrap_or("erreur inconnue");
+        
+        return Err(format!("Erreur de conversion audio : {}", detail));
     }
 
     // Lecture du fichier WAV

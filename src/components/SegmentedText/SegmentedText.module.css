@@ -9,6 +9,7 @@
     margin-bottom: var(--space-md);
     max-height: 300px;
     overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .readonly {
@@ -28,4 +29,24 @@
     padding: 1px 2px;
     color: var(--color-text);
     transition: background-color 0.2s ease;
+}
+
+.truncateEllipsis {
+    color: var(--color-text-muted);
+}
+
+.btnExpand {
+    display: block;
+    margin-top: var(--space-sm);
+    background: transparent;
+    color: var(--color-accent);
+    border: none;
+    font-size: var(--font-size-sm);
+    padding: 0;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.btnExpand:hover {
+    color: var(--color-accent-hover);
 }

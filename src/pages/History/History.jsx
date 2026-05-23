@@ -27,6 +27,7 @@ function History() {
     const [searchQuery, setSearchQuery]       = useState("");
     const textareaRef                         = useRef(null);
     const audioRef                            = useRef(null);
+    const audioCacheRef                       = useRef(new Map());
 
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
     
@@ -57,7 +58,6 @@ function History() {
     async function loadAudio(t, e) {
         e.stopPropagation();
 
-        // Si déjà ouvert, on ferme
         if (audioSrc?.id === t.id) {
             setAudioSrc(null);
             setActiveSegIdx(-1);
@@ -67,12 +67,24 @@ function History() {
 
         if (!t.audio_path) return;
 
+        // Vérification du cache
+        if (audioCacheRef.current.has(t.id)) {
+            const cached = audioCacheRef.current.get(t.id);
+
+            setAudioSrc({ id: t.id, ...cached });
+            setActiveSegIdx(-1);
+
+            return;
+        }
+
         setLoadingAudio(true);
-        
+
         try {
-            const base64 = await invoke("get_audio_base64", { path: t.audio_path });
+            const base64   = await invoke("get_audio_base64", { path: t.audio_path });
             const segments = t.segments ? JSON.parse(t.segments) : [];
-            
+
+            // Mise en cache
+            audioCacheRef.current.set(t.id, { src: base64, segments });
             setAudioSrc({ id: t.id, src: base64, segments });
             setActiveSegIdx(-1);
         } catch (e) {
@@ -181,7 +193,11 @@ function History() {
 
     function goToPage(p) {
         if (p < 1 || p > totalPages) return;
+
         setSelected(null);
+        cancelEdit();
+        setAudioSrc(null);
+        audioCacheRef.current.clear();
         setPage(p);
     }
     
