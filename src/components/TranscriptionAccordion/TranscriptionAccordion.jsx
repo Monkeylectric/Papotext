@@ -1,6 +1,7 @@
 import { useRef, useEffect } from "react";
-import SegmentedText from "../SegmentedText/SegmentedText";
-import AccordionActions from "../AccordionActions/AccordionActions";
+import AudioPlayer from "@components/AudioPlayer/AudioPlayer";
+import SegmentedText from "@components/SegmentedText/SegmentedText";
+import AccordionActions from "@components/AccordionActions/AccordionActions";
 import style from "./TranscriptionAccordion.module.css";
 
 function TranscriptionAccordion({
@@ -34,36 +35,55 @@ function TranscriptionAccordion({
     useEffect(() => {
         if (isEditing && textareaRef.current) {
             const el = textareaRef.current;
+
             el.focus();
             el.setSelectionRange(el.value.length, el.value.length);
         }
     }, [isEditing]);
 
+    // Curseur à l'endroit du segment en cours
+    useEffect(() => {
+        if (!isEditing || !isAudioOpen || !textareaRef.current) return;
+        if (activeSegIdx < 0 || !segments?.[activeSegIdx]) return;
+
+        const segText = segments[activeSegIdx].text.trim();
+        const pos = editText.indexOf(segText);
+
+        if (pos !== -1) {
+            textareaRef.current.focus();
+            textareaRef.current.setSelectionRange(pos, pos + segText.length);
+
+            // Scroll du textarea pour rendre la sélection visible
+            const lineHeight = parseInt(getComputedStyle(textareaRef.current).lineHeight);
+            const lines = editText.substring(0, pos).split("\n").length;
+            textareaRef.current.scrollTop = (lines - 2) * lineHeight;
+        }
+    }, [activeSegIdx]);
+
     return (
         <div className={style.accordion}>
             {/* Lecteur audio — toujours visible si chargé */}
             {isAudioOpen && (
-                <audio
-                    ref={audioRef}
+                <AudioPlayer
                     src={audioSrc.src}
-                    controls
-                    className={style.audioPlayer}
+                    segments={audioSrc.segments}
+                    activeSegIdx={activeSegIdx}
+                    audioRef={audioRef}
                     onTimeUpdate={onTimeUpdate}
                     onEnded={onAudioEnded}
                 />
             )}
 
             {/* Surbrillance en mode édition si audio actif */}
-            {isEditing && isAudioOpen && segments?.length > 0 && (
+            {!isEditing && (
                 <SegmentedText
                     text={t.text}
                     segments={segments}
                     activeSegIdx={activeSegIdx}
-                    readonly
                 />
             )}
 
-            {/* Textarea en mode édition */}
+            {/* Textarea en mode lecture avec surbrillance */}
             {isEditing && (
                 <>
                     <textarea
@@ -78,15 +98,6 @@ function TranscriptionAccordion({
                     />
                     <p className={style.editHint}>Ctrl+Entrée pour sauvegarder · Échap pour annuler</p>
                 </>
-            )}
-
-            {/* Texte en mode lecture */}
-            {!isEditing && (
-                <SegmentedText
-                    text={t.text}
-                    segments={segments}
-                    activeSegIdx={activeSegIdx}
-                />
             )}
 
             <AccordionActions
