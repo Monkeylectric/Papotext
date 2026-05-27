@@ -28,6 +28,7 @@ function History() {
     const textareaRef                         = useRef(null);
     const audioRef                            = useRef(null);
     const audioCacheRef                       = useRef(new Map());
+    const saveTimerRef                        = useRef(null);
 
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
     
@@ -153,26 +154,25 @@ function History() {
     }
 
     function cancelEdit() {
+        if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+
         setEditingId(null);
         setEditText("");
     }
 
-    async function saveEdit(id) {
+    async function saveEdit(id, textOverride) {
         if (saving) return;
 
+        const textToSave = textOverride ?? editText;
         setSaving(true);
 
         try {
-            await invoke("update_transcription", { id, text: editText });
+            await invoke("update_transcription", { id, text: textToSave });
+            setTranscriptions(prev => prev.map(t => t.id === id ? { ...t, text: textToSave } : t));
+            setSelected(prev => prev?.id === id ? { ...prev, text: textToSave } : prev);
 
-            // Mise à jour locale sans rechargement réseau
-            setTranscriptions(prev => prev.map(t =>
-                t.id === id ? { ...t, text: editText } : t
-            ));
-
-            // Synchroniser l'élément sélectionné si c'est lui
-            setSelected(prev => prev?.id === id ? { ...prev, text: editText } : prev);
-            cancelEdit();
+            // Ne pas appeler cancelEdit() en mode auto-save
+            if (textOverride === undefined) cancelEdit();
         } catch (e) {
             console.error(e);
         } finally {
@@ -199,6 +199,18 @@ function History() {
         setAudioSrc(null);
         audioCacheRef.current.clear();
         setPage(p);
+    }
+
+    function handleEditTextChange(text, id) {
+        setEditText(text);
+
+        // Reset du timer précédent
+        if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+
+        // Nouvelle sauvegarde dans 5 seconde
+        saveTimerRef.current = setTimeout(() => {
+            saveEdit(id, text);
+        }, 5000);
     }
     
     if (loading) {
@@ -276,7 +288,7 @@ function History() {
                                 editingId={editingId}
                                 editText={editText}
                                 saving={saving}
-                                onEditTextChange={setEditText}
+                                onEditTextChange={(text) => handleEditTextChange(text, editingId)}
                                 onStartEdit={startEdit}
                                 onCancelEdit={cancelEdit}
                                 onSaveEdit={saveEdit}

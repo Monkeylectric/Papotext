@@ -158,7 +158,7 @@ function Settings() {
                 </div>
                 )}
         
-                {error && <div className={s.error}><AlertCircle size={15} /> {error}</div>}
+                {error && <div className={style.error}><AlertCircle size={15} /> {error}</div>}
             </div>
         
             {/* Modèle local */}

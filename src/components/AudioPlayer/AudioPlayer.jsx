@@ -34,8 +34,8 @@ function AudioPlayer({ src, segments, activeSegIdx, onTimeUpdate, onEnded, audio
             setCurrentTime(audio.currentTime);
             onTimeUpdate?.();
         };
-        const onEnd = () => { s
-            etPlaying(false); onEnded?.();
+        const onEnd = () => { 
+            setPlaying(false); onEnded?.();
         };
 
         audio.addEventListener("play", onPlay);

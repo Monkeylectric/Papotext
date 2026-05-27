@@ -37,6 +37,9 @@
     ],
     "resources": {
       "models/ggml-small.bin": "models/ggml-small.bin"
+    },
+    "macOS": {
+        "infoPlist": "Info.plist"
     }
   }
 }

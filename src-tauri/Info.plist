@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Papotext a besoin d'accéder au microphone pour la transcription en direct.</string>
+    <key>NSDocumentsFolderUsageDescription</key>
+    <string>Papotext a besoin d'accéder à vos fichiers pour les transcrire.</string>
+    <key>NSDownloadsFolderUsageDescription</key>
+    <string>Papotext a besoin d'accéder au dossier Téléchargements pour ouvrir des fichiers audio.</string>
+</dict>
+</plist>

@@ -31,11 +31,11 @@ function AccordionActions({
             <div className={style.actions}>
                 {audioButton}
                 <button className={style.btnCancel} onClick={onCancelEdit}>
-                    <X size={14} /> Annuler
+                    <X size={14} /> Quitter
                 </button>
                 <button className={style.btnSave} onClick={() => onSaveEdit(t.id)} disabled={saving}>
                     {saving
-                        ? <><Loader2 size={14} className="spinning" /> Enregistrement...</>
+                        ? <><Loader2 size={14} className="spinning" /> Sauvegarde...</>
                         : <><Save size={14} /> Enregistrer</>
                     }
                 </button>
