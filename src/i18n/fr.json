@@ -105,5 +105,27 @@
     "sidebar": {
         "transcribing": "Transcription en cours",
         "transcribingPercent": "Transcription en cours - {{percent}}%"
+    },
+    "error": {
+        "audio": {
+            "temp_path":  "Chemin temporaire invalide",
+            "path":       "Chemin de fichier invalide",
+            "ffmpeg":     "Impossible de lire le fichier audio : {{detail}}",
+            "duration":   "Impossible de lire la durée du fichier",
+            "segment":    "Erreur sur le segment {{segment}} : {{detail}}",
+            "conversion": "Erreur de conversion audio : {{detail}}",
+            "pool":       "Le moteur de transcription n'est pas initialisé",
+            "model":      "Aucun modèle chargé",
+            "busy":       "Une transcription est déjà en cours",
+            "cancelled":  "Transcription annulée"
+        },
+        "history": {
+            "audio_not_found": "Fichier audio introuvable. Il a peut-être été déplacé ou supprimé."
+        },
+        "model": {
+            "delete_default": "Impossible de supprimer le modèle par défaut",
+            "not_found":      "Modèle introuvable",
+            "copy":           "Impossible de copier le modèle par défaut : {{detail}}"
+        }
     }
 }

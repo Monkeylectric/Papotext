@@ -4,6 +4,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { listen } from "@tauri-apps/api/event";
 import { AlertCircle } from "lucide-react";
+import { translateError } from "@/i18n/errorHelper";
 import TranslateToggle from "@components/TranslateToggle/TranslateToggle";
 import FileTranscription from "@components/FileTranscription/FileTranscription";
 import LiveTranscription from "@components/LiveTranscription/LiveTranscription";
@@ -104,7 +105,7 @@ function Main({ isTranscribing, onTranscribingChange, transcriptionProgress, onP
             const result = await invoke("transcribe_audio", { audioPath, translate: translateMode });
             // setTranscription(result);
         } catch (e) {
-            setError(String(e));
+            setError(translateError(String(e)));
         } finally {
             setLoading(false);
             setProgress(null);
@@ -140,7 +141,7 @@ function Main({ isTranscribing, onTranscribingChange, transcriptionProgress, onP
                         // Stocker les tokens pour le prochain chunk
                         promptTokensRef.current = tokens;
                     } catch (err) {
-                        setError(String(err));
+                        setError(t("live.micError", { message: e.message }));
                     }
 
                     if (mediaRecorderRef.current !== null) recordChunk();

@@ -8,6 +8,7 @@ mod audio;
 mod history;
 mod models;
 mod settings;
+mod errors;
 
 /// Structure WhisperPool qui représente un "pool" de contextes Whisper
 pub struct WhisperPool {

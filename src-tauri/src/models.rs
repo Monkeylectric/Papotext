@@ -1,6 +1,7 @@
 use tauri::Manager;
 use tauri::Emitter;
 use tauri_plugin_http::reqwest;
+use crate::errors::{err, err_detail};
 
 /// Récupération du dossier local des modèles
 /// 
@@ -63,7 +64,8 @@ pub fn init_default_model(app: &tauri::AppHandle) -> Result<(), String> {
 
         // Copie du modèle
         std::fs::copy(&src, &dest)
-            .map_err(|e| format!("Impossible de copier le modèle par défaut : {}", e))?;
+            //.map_err(|e| format!("Impossible de copier le modèle par défaut : {}", e))?;
+            .map_err(|e| err_detail("error.model.copy", &e.to_string()))?;
     }
 
     Ok(())
@@ -198,14 +200,16 @@ pub fn delete_model(
 ) -> Result<(), String> {
     // Protection du modèle par défaut
     if model_name == "ggml-small.bin" {
-        return Err("Impossible de supprimer le modèle par défaut".to_string());
+        //return Err("Impossible de supprimer le modèle par défaut".to_string());
+        return Err(err("error.model.delete_default"));
     }
 
     let model_path = get_models_dir(&app)?.join(&model_name);
 
     // Vérifie que le fichier existe
     if !model_path.exists() {
-        return Err("Modèle introuvable".to_string());
+        //return Err("Modèle introuvable".to_string());
+        return Err(err("error.model.not_found"));
     }
 
     // Suppression du fichier

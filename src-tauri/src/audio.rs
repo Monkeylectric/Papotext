@@ -13,6 +13,7 @@ use crate::WhisperPool;
 use crate::models::get_models_dir;
 use crate::settings::get_selected_model;
 use crate::history::save_transcription;
+use crate::errors::{err, err_detail, err_segment};
 
 #[derive(serde::Serialize, Clone)]
 pub struct Segment {
@@ -113,7 +114,8 @@ pub async fn convert_to_wav_16k(
     let output = temp_dir.join(&filename);
 
     let output_str = output.to_str()
-        .ok_or("chemin temporaire invalide")?
+        // .ok_or("chemin temporaire invalide")?
+        .ok_or_else(|| err("error.audio.temp_path"))?
         .to_string();
 
     // Pipeline de filtres audio
@@ -144,7 +146,8 @@ pub async fn convert_to_wav_16k(
             .last()
             .unwrap_or("erreur inconnue");
 
-        return Err(format!("Impossible de lire le fichier audio : {}", detail));
+        // return Err(format!("Impossible de lire le fichier audio : {}", detail));
+        return Err(err_detail("error.audio.ffmpeg", detail));
     }
 
     Ok(output)
@@ -194,7 +197,8 @@ async fn get_duration(
         }
     }
 
-    Err("impossible de lire la durée".to_string())
+    // Err("impossible de lire la durée".to_string())
+    Err(err("error.audio.duration"))
 }
 
 /// Détection des silences
@@ -321,7 +325,8 @@ fn load_pool(
         let model_path = get_models_dir(app)?
             .join(&selected_model)
             .to_str()
-            .ok_or("chemin invalide")?
+            //.ok_or("chemin invalide")?
+            .ok_or_else(|| err("error.audio.path"))?
             .to_string();
 
         // Nombre total de threads CPU disponibles
@@ -401,7 +406,10 @@ async fn transcribe_segment_async(
     let _guard = TempFiles::new(vec![temp_path.clone()]);
     // Pipeline audio
     let filters = audio_filters_segments();
-    let temp_str = temp_path.to_str().ok_or("chemin invalide")?.to_string();
+    let temp_str = temp_path.to_str()
+        //.ok_or("chemin invalide")?
+        .ok_or_else(|| err("error.audio.path"))?
+        .to_string();
 
     // Extraction du segment avec FFmpeg
     let ffmpeg_result = app.shell()
@@ -428,7 +436,8 @@ async fn transcribe_segment_async(
             .last()
             .unwrap_or("erreur inconnue");
 
-        return Err(format!("Erreur sur le segment {} : {}", index + 1, detail));
+        // return Err(format!("Erreur sur le segment {} : {}", index + 1, detail));
+        return Err(err_segment("error.audio.segment", index + 1, detail));
     }
 
     let temp_path_clone = temp_path.clone();
@@ -589,7 +598,9 @@ async fn transcribe_short(
     // Récupération du contexte Whisper 
     let ctx_arc = {
         let pool_lock = state.whisper_pool.lock().map_err(|e| e.to_string())?;
-        let pool = pool_lock.as_ref().ok_or("pool non initialisé")?;
+        let pool = pool_lock.as_ref()
+            //.ok_or("pool non initialisé")?;
+            .ok_or_else(|| err("error.audio.pool"))?;
         pool.contexts[0].clone()
     }; // pool_lock libéré ici
 
@@ -696,7 +707,8 @@ pub async fn transcribe_audio(
         let mut flag = state.is_transcribing.lock()
             .map_err(|e| e.to_string())?;
         if *flag {
-            return Err("Une transcription est déjà en cours".to_string());
+            // return Err("Une transcription est déjà en cours".to_string());
+            return Err(err("error.audio.busy"));
         }
         *flag = true;
     } // flag libéré ici, les autres locks peuvent être pris librement
@@ -757,7 +769,9 @@ pub async fn transcribe_audio_inner(
     // Récupération des contextes Whisper
     let ctx_arcs = {
         let pool_lock = state.whisper_pool.lock().map_err(|e| e.to_string())?;
-        let pool = pool_lock.as_ref().ok_or("pool non initialisé")?;
+        let pool = pool_lock.as_ref()
+            //.ok_or("pool non initialisé")?;
+            .ok_or_else(|| err("error.audio.pool"))?;
         pool.contexts.iter().cloned().collect::<Vec<_>>()
     };
 
@@ -803,7 +817,8 @@ pub async fn transcribe_audio_inner(
         if state.is_cancelled.load(std::sync::atomic::Ordering::SeqCst) {
             futures.clear(); // Abandonne les futures restantes
 
-            return Err("Transcription annulée".to_string());
+            // return Err("Transcription annulée".to_string());
+            return Err(err("error.audio.cancelled"));
         }
 
         let join_result: Result<Result<(usize, String, Vec<Segment>), String>, _> = handle_result;
@@ -918,8 +933,12 @@ pub async fn transcribe_chunk(
     let _guard = TempFiles::new(vec![input_path.clone(), output_path.clone()]);
 
     // Convertir en WAV 16kHz avec ffmpeg
-    let input_str = input_path.to_str().ok_or("chemin invalide")?;
-    let output_str = output_path.to_str().ok_or("chemin invalide")?;
+    let input_str = input_path.to_str()
+        //.ok_or("chemin invalide")?;
+        .ok_or_else(|| err("error.audio.path"))?;
+    let output_str = output_path.to_str()
+        //.ok_or("chemin invalide")?;
+        .ok_or_else(|| err("error.audio.path"))?;
 
     let audio_filters = audio_filters_realtime();
 
@@ -946,7 +965,8 @@ pub async fn transcribe_chunk(
             .last()
             .unwrap_or("erreur inconnue");
         
-        return Err(format!("Erreur de conversion audio : {}", detail));
+        // return Err(format!("Erreur de conversion audio : {}", detail));
+        return Err(err_detail("error.audio.conversion", detail));
     }
 
     // Lecture du fichier WAV
@@ -965,7 +985,8 @@ pub async fn transcribe_chunk(
             .map_err(|e| e.to_string())?;
 
         let ctx = ctx_lock.as_ref()
-            .ok_or("modèle non chargé")?;
+            //.ok_or("modèle non chargé")?;
+            .ok_or_else(|| err("error.audio.model"))?;
 
         let mut whisper_state = ctx.create_state()
             .map_err(|e| e.to_string())?;

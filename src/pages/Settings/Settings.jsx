@@ -5,6 +5,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { listen } from "@tauri-apps/api/event";
 import { Check, AlertCircle } from "lucide-react";
 import i18n from "@/i18n/index.js";
+import { translateError } from "@/i18n/errorHelper";
 import ConfirmModal from "@components/ConfirmModal/ConfirmModal";
 import ModelCard from "@components/ModelCard/ModelCard";
 import LocalModelSection from "@components/LocalModelSection/LocalModelSection";
@@ -75,7 +76,7 @@ function Settings() {
         try {
             await invoke("download_model", { modelName });
         } catch (e) {
-            setError(String(e));
+            setError(translateError(String(e)));
             setDownloading(null);
         }
     }
@@ -92,7 +93,7 @@ function Settings() {
             setConfirmModel(null);
             loadData();
         } catch (e) {
-            setError(String(e));
+            setError(translateError(String(e)));
         }
     }
     

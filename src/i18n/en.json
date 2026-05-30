@@ -105,5 +105,27 @@
     "sidebar": {
         "transcribing": "Transcribing",
         "transcribingPercent": "Transcribing - {{percent}}%"
+    },
+    "error": {
+        "audio": {
+            "temp_path": "Invalid temporary path",
+            "path": "Invalid file path",
+            "ffmpeg": "Unable to read audio file: {{detail}}",
+            "duration": "Unable to read file duration",
+            "segment": "Error on segment {{segment}}: {{detail}}",
+            "conversion": "Audio conversion error: {{detail}}",
+            "pool": "Transcription engine is not initialized",
+            "model": "No model loaded",
+            "busy": "A transcription is already in progress",
+            "cancelled": "Transcription cancelled"
+        },
+        "history": {
+            "audio_not_found": "Audio file not found. It may have been moved or deleted."
+        },
+        "model": {
+            "delete_default": "Cannot delete the default model",
+            "not_found": "Model not found",
+            "copy": "Unable to copy the default model: {{detail}}"
+        }
     }
 }

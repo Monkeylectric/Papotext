@@ -1,6 +1,7 @@
 use tauri::Manager;
 use rusqlite::Connection;
 use crate::AppState;
+use crate::errors::err;
 
 /// Nombre de transcriptions par page
 const PAGE_SIZE: i64 = 20;
@@ -262,7 +263,8 @@ pub fn get_audio_base64(path: String) -> Result<String, String> {
     use std::io::Read;
 
     let mut file = std::fs::File::open(&path)
-        .map_err(|_| "Fichier audio introuvable. Il a peut-être été déplacé ou supprimé.".to_string())?;
+        // .map_err(|_| "Fichier audio introuvable. Il a peut-être été déplacé ou supprimé.".to_string())?;
+        .map_err(|_| err("error.history.audio_not_found"))?;
 
     let mut buf = Vec::new();
     file.read_to_end(&mut buf)

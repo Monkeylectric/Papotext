@@ -13,7 +13,8 @@ function History() {
     const { t }                               = useTranslation();
     const [transcriptions, setTranscriptions] = useState([]);
     const [selected, setSelected]             = useState(null);
-    const [loading, setLoading]               = useState(true);
+    const [initialLoading, setInitialLoading] = useState(true);
+    const [listLoading, setListLoading]       = useState(false);
     const [copied, setCopied]                 = useState(false);
     const [confirmId, setConfirmId]           = useState(null);
     const [page, setPage]                     = useState(1);
@@ -31,6 +32,7 @@ function History() {
     const audioRef                            = useRef(null);
     const audioCacheRef                       = useRef(new Map());
     const saveTimerRef                        = useRef(null);
+    const prevSearchQuery                     = useRef("");
 
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
     
@@ -50,6 +52,9 @@ function History() {
 
     // Recharge l'historique à la modification du champs de recherche
     useEffect(() => {
+        if (searchQuery === prevSearchQuery.current) return;
+        prevSearchQuery.current = searchQuery;
+
         const timer = setTimeout(() => {
             setPage(1);
             loadHistory(1, searchQuery);
@@ -108,7 +113,11 @@ function History() {
     }
     
     async function loadHistory(p, q = searchQuery) {
-        setLoading(true);
+        if (initialLoading) {
+            setInitialLoading(true);
+        } else {
+            setListLoading(true);
+        }
 
         try {
             const result = await invoke("get_transcriptions", {
@@ -122,7 +131,8 @@ function History() {
         } catch (e) {
             console.error(e);
         } finally {
-            setLoading(false);
+            setInitialLoading(false);
+            setListLoading(false);
         }
     }
     
@@ -215,7 +225,7 @@ function History() {
         }, 5000);
     }
     
-    if (loading) {
+    if (initialLoading) {
         return <div className={style.loading}><Loader2 size={15} className="spinning" /> {t("history.loading")}</div>;
     }
     
@@ -265,7 +275,7 @@ function History() {
                 )}
             </div>
         
-            <div className={style.list}>
+            <div className={`${style.list} ${listLoading ? style.listLoading : ""}`}>
                 {transcriptions.map((transcription) => (
                     <div key={transcription.id}>
                         {/* Carte */}
