@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { useTranslation } from "react-i18next";
 import { Mic, ClipboardList, Settings as SettingsLucid, Sun, Moon, Loader2 } from "lucide-react";
+import logo from "@assets/logo.svg";
 import Main from "@pages/Main/Main";
 import History from "@pages/History/History";
 import Settings from "@pages/Settings/Settings";
@@ -12,6 +14,7 @@ function App() {
     const [theme, setTheme] = useState(() => {
         return localStorage.getItem("theme") || "auto";
     });
+    const { t }                                             = useTranslation();
     const [isTranscribing, setIsTranscribing]               = useState(false);
     const [transcriptionProgress, setTranscriptionProgress] = useState(null);
     const [transcriptionError, setTranscriptionError]       = useState("");
@@ -50,30 +53,30 @@ function App() {
         (theme === "auto" && window.matchMedia("(prefers-color-scheme: dark)").matches);
 
     const navItems = [
-        { id: "main",     icon: <Mic size={17} />,          label: "Transcription", badge: isTranscribing },
-        { id: "history",  icon: <ClipboardList size={17} />, label: "Historique" },
-        { id: "settings", icon: <SettingsLucid size={17} />, label: "Paramètres" },
+        { id: "main",     icon: <Mic size={17} />,          label: `${t("nav.transcription")}`, badge: isTranscribing },
+        { id: "history",  icon: <ClipboardList size={17} />, label: `${t("nav.history")}` },
+        { id: "settings", icon: <SettingsLucid size={17} />, label: `${t("nav.settings")}` },
     ];
     
     return (
         <div className={styles.app}>
             {showCancelConfirm && (
                 <ConfirmModal
-                    title="Annuler la transcription ?"
-                    message="La transcription en cours sera interrompue. Le texte déjà transcrit ne sera pas sauvegardé."
+                    title={t("confirm.cancelTranscription")}
+                    message={t("confirm.cancelTranscriptionMsg")}
                     onConfirm={() => {
                         setShowCancelConfirm(false);
                         cancelTranscription();
                     }}
                     onCancel={() => setShowCancelConfirm(false)}
-                    confirmLabel="Annuler la transcription"
+                    confirmLabel={t("confirm.cancelTranscriptionBtn")}
                 />
             )}
 
             {/* Sidebar */}
             <aside className={styles.sidebar}>
                 <div className={styles.sidebarTitle}>
-                    <Mic size={16} /> Papotext
+                    <img src={logo} alt="Papotext" height={30} /> Papotext
                 </div>
         
                 <nav>
@@ -97,7 +100,7 @@ function App() {
                     <div className={styles.transcribingBanner}>
                         <Loader2 size={13} className="spinning" />
                         <span>
-                            Transcription en cours
+                            {t("main.transcribing")}
                             {transcriptionProgress ? ` - ${transcriptionProgress.percent}%` : "..."}
                         </span>
                     </div>
@@ -105,7 +108,7 @@ function App() {
         
                 <div className={styles.themeToggle}>
                     <button className={styles.themeButton} onClick={toggleTheme}>
-                        {isDark ? <><Sun size={15} /> Mode clair</> : <><Moon size={15} /> Mode sombre</>}
+                        {isDark ? <><Sun size={15} /> {t("theme.light")}</> : <><Moon size={15} /> {t("theme.dark")}</>}
                     </button>
                 </div>
             </aside>

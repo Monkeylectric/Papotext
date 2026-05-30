@@ -1,11 +1,12 @@
 import { useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import AudioPlayer from "@components/AudioPlayer/AudioPlayer";
 import SegmentedText from "@components/SegmentedText/SegmentedText";
 import AccordionActions from "@components/AccordionActions/AccordionActions";
 import style from "./TranscriptionAccordion.module.css";
 
 function TranscriptionAccordion({
-    transcription: t,
+    transcription,
     // Audio
     audioSrc,
     audioRef,
@@ -26,9 +27,10 @@ function TranscriptionAccordion({
     copied,
     onCopy,
 }) {
+    const { t }       = useTranslation();
     const textareaRef = useRef(null);
-    const isEditing   = editingId === t.id;
-    const isAudioOpen = audioSrc?.id === t.id;
+    const isEditing   = editingId === transcription.id;
+    const isAudioOpen = audioSrc?.id === transcription.id;
     const segments    = isAudioOpen ? audioSrc.segments : null;
 
     // Focus automatique + curseur en fin de texte
@@ -77,7 +79,7 @@ function TranscriptionAccordion({
             {/* Surbrillance en mode édition si audio actif */}
             {!isEditing && (
                 <SegmentedText
-                    text={t.text}
+                    text={transcription.text}
                     segments={segments}
                     activeSegIdx={activeSegIdx}
                 />
@@ -93,15 +95,15 @@ function TranscriptionAccordion({
                         onChange={e => onEditTextChange(e.target.value)}
                         onKeyDown={e => {
                             if (e.key === "Escape") onCancelEdit();
-                            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) onSaveEdit(t.id);
+                            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) onSaveEdit(transcription.id);
                         }}
                     />
-                    <p className={style.editHint}>Ctrl+Entrée pour sauvegarder · Échap pour annuler</p>
+                    <p className={style.editHint}>{t("edit.hint")}</p>
                 </>
             )}
 
             <AccordionActions
-                transcription={t}
+                transcription={transcription}
                 isEditing={isEditing}
                 isAudioOpen={isAudioOpen}
                 loadingAudio={loadingAudio}

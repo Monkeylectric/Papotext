@@ -1,23 +1,18 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { listen } from "@tauri-apps/api/event";
 import { Check, AlertCircle } from "lucide-react";
+import i18n from "@/i18n/index.js";
 import ConfirmModal from "@components/ConfirmModal/ConfirmModal";
 import ModelCard from "@components/ModelCard/ModelCard";
 import LocalModelSection from "@components/LocalModelSection/LocalModelSection";
 import CpuSlider from "@components/CpuSlider/CpuSlider";
 import style from "./Settings.module.css";
 
-const MODELS = [
-    { name: "ggml-tiny.bin",   label: "Tiny",   size: "75 Mo",   desc: "Rapide, configs limitées" },
-    { name: "ggml-base.bin",   label: "Base",   size: "142 Mo",  desc: "Bon compromis vitesse/qualité" },
-    { name: "ggml-small.bin",  label: "Small",  size: "466 Mo",  desc: "Recommandé" },
-    { name: "ggml-medium.bin", label: "Medium", size: "1.5 Go",  desc: "Bonne qualité" },
-    { name: "ggml-large.bin",  label: "Large",  size: "2.9 Go",  desc: "Meilleure qualité" },
-]
-
 function Settings() {
+    const { t }                                 = useTranslation();
     const [selectedModel, setSelectedModel]     = useState("");
     const [availableModels, setAvailableModels] = useState([]);
     const [downloading, setDownloading]         = useState(null);
@@ -25,6 +20,14 @@ function Settings() {
     const [error, setError]                     = useState("");
     const [confirmModel, setConfirmModel]       = useState(null);
     const [cpuUsage, setCpuUsage]               = useState(75);
+
+    const MODELS = [
+        { name: "ggml-tiny.bin",   label: "Tiny",   size: "75 Mo",   desc: t("models.tiny.desc") },
+        { name: "ggml-base.bin",   label: "Base",   size: "142 Mo",  desc: t("models.base.desc") },
+        { name: "ggml-small.bin",  label: "Small",  size: "466 Mo",  desc: t("models.small.desc") },
+        { name: "ggml-medium.bin", label: "Medium", size: "1.5 Go",  desc: t("models.medium.desc") },
+        { name: "ggml-large.bin",  label: "Large",  size: "2.9 Go",  desc: t("models.large.desc") },
+    ]
     
     useEffect(() => {
         loadData();
@@ -111,22 +114,22 @@ function Settings() {
             {/* Modale de confirmation */}
             {confirmModel && (
                 <ConfirmModal
-                    title="Supprimer ce modèle ?"
-                    message={`${confirmModel} sera supprimé définitivement. Vous devrez le retélécharger pour l'utiliser à nouveau.`}
+                    title={t("settings.deleteConfirmTitle")}
+                    message={t("settings.deleteConfirmMsg", { model: confirmModel })}
                     onConfirm={() => deleteModel(confirmModel)}
                     onCancel={() => setConfirmModel(null)}
                 />
             )}
 
-            <h1 className={style.pageTitle}>Paramètres</h1>
+            <h1 className={style.pageTitle}>{t("settings.title")}</h1>
         
             {/* Modèles */}
             <div className={style.section}>
-                <h2 className={style.sectionTitle}>Modèle de transcription</h2>
-                <p className={style.sectionDesc}>Le modèle détermine la qualité et la vitesse de transcription.</p>
+                <h2 className={style.sectionTitle}>{t("settings.modelSection")}</h2>
+                <p className={style.sectionDesc}>{t("settings.modelDesc")}</p>
         
                 <div className={style.activeModel}>
-                    <Check size={14} /> Modèle actif : {selectedModel}
+                    <Check size={14} /> {t("settings.activeModel", { activeModel: selectedModel })}
                 </div>
 
                 {/* Grille */}
@@ -151,7 +154,7 @@ function Settings() {
                 {downloading && (
                 <div className={style.downloadProgress}>
                     <div className={style.downloadLabel}>
-                        <span>Téléchargement de {downloading}...</span>
+                        <span>{t("settings.downloading", { model: downloading })}</span>
                         <span className={style.downloadPercent}>{progress}%</span>
                     </div>
                     <progress value={progress} max="100" />
@@ -163,19 +166,32 @@ function Settings() {
         
             {/* Modèle local */}
             <div className={style.section}>
-                <h2 className={style.sectionTitle}>Modèle local</h2>
+                <h2 className={style.sectionTitle}>{t("settings.localSection")}</h2>
                 <LocalModelSection onSelectFile={selectLocalFile} />
             </div>
 
             {/* Performances */}
             <div className={style.section}>
-                <h2 className={style.sectionTitle}>Performances</h2>
-                <p className={style.sectionDesc}>
-                    Ajustez l'utilisation du CPU pendant la transcription.
-                    Une valeur plus basse laisse la machine plus réactive.
-                </p>
+                <h2 className={style.sectionTitle}>{t("settings.perfSection")}</h2>
+                <p className={style.sectionDesc}>{t("settings.perfDesc")}</p>
 
                 <CpuSlider value={cpuUsage} onChange={updateCpuUsage} />
+            </div>
+
+            {/* Language */}
+            <div className={style.section}>
+                <h2 className={style.sectionTitle}>{t("settings.language")}</h2>
+                <div style={{ display: "flex", gap: "8px" }}>
+                    {["fr", "en"].map(lang => (
+                    <button
+                        key={lang}
+                        onClick={() => i18n.changeLanguage(lang)}
+                        style={{ fontWeight: i18n.language === lang ? "bold" : "normal" }}
+                    >
+                        {lang === "fr" ? "🇫🇷 Français" : "🇬🇧 English"}
+                    </button>
+                    ))}
+                </div>
             </div>
         </div>
     );

@@ -1,21 +1,21 @@
 import { FileAudio, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import style from "./TranscriptionCard.module.css";
 
-function TranscriptionCard({ transcription: t, isActive, onToggle, onDelete }) {
+function TranscriptionCard({ transcription, isActive, onToggle, onDelete }) {
     return (
         <div
             className={`${style.card} ${isActive ? style.cardActive : ""}`}
-            onClick={() => onToggle(t)}
+            onClick={() => onToggle(transcription)}
         >
             <div className={style.cardHeader}>
-                <span className={style.cardFilename}><FileAudio size={15} /> {t.filename}</span>
+                <span className={style.cardFilename}><FileAudio size={15} /> {transcription.filename}</span>
                 <div className={style.cardRight}>
-                    <span className={style.cardMeta}>{t.created_at} · {t.model}</span>
+                    <span className={style.cardMeta}>{transcription.created_at} · {transcription.model}</span>
                     <button
                         className={style.btnDelete}
                         onClick={(e) => {
                             e.stopPropagation();
-                            onDelete(t.id);
+                            onDelete(transcription.id);
                         }}
                     >
                         <Trash2 size={15} />
@@ -26,7 +26,7 @@ function TranscriptionCard({ transcription: t, isActive, onToggle, onDelete }) {
                 </div>
             </div>
             {!isActive && (
-                <p className={style.cardPreview}>{t.text}</p>
+                <p className={style.cardPreview}>{transcription.text}</p>
             )}
         </div>
     );

@@ -28,12 +28,12 @@
     resize: vertical;
     outline: none;
     transition: border-color var(--transition), box-shadow var(--transition);
-    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+    box-shadow: 0 0 0 3px var(--color-accent-a10);
     margin-bottom: var(--space-xs);
 }
 
 .editTextarea:focus {
-    box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.15);
+    box-shadow: 0 0 0 4px var(--color-accent-a15);
 }
 
 .editHint {

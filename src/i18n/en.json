@@ -1,0 +1,109 @@
+{
+    "nav": {
+        "transcription": "Transcription",
+        "history": "History",
+        "settings": "Settings"
+    },
+    "main": {
+        "title": "Audio Transcription",
+        "translateToggle": "Translate to English",
+        "fromFile": "From a file",
+        "chooseFile": "Choose an audio file",
+        "transcribe": "Transcribe",
+        "transcribing": "Transcribing...",
+        "cancel": "Cancel",
+        "cancelling": "Cancelling...",
+        "segment": "Segment {{current}} / {{total}}",
+        "result": "Result"
+    },
+    "live": {
+        "title": "Live",
+        "start": "Start recording",
+        "stop": "Stop",
+        "recording": "Recording...",
+        "result": "Live transcription",
+        "micError": "Unable to access microphone: {{message}}"
+    },
+    "history": {
+        "title": "History",
+        "search": "Search by file name or content...",
+        "empty": "No transcriptions",
+        "emptyDesc": "Transcriptions will appear here.",
+        "loading": "Loading...",
+        "deleteConfirmTitle": "Delete this transcription?",
+        "deleteConfirmMsg": "This transcription will be permanently deleted. This action cannot be undone.",
+        "stats": {
+            "total": "Transcriptions",
+            "topModel": "Most used model",
+            "latestFile": "Latest file"
+        }
+    },
+    "settings": {
+        "title": "Settings",
+        "modelSection": "Transcription model",
+        "modelDesc": "The model determines the quality and speed of transcription.",
+        "activeModel": "Active model : {{activeModel}}",
+        "activeModelCard": "Active",
+        "localSection": "Local model",
+        "localDesc": "You can manually download a model from <0>HuggingFace</0> and select it here.",
+        "perfSection": "Performance",
+        "perfDesc": "Adjust CPU usage during transcription. A lower value keeps the machine more responsive.",
+        "language": "Language",
+        "downloading": "Downloading {{model}}...",
+        "deleteConfirmTitle": "Delete this model?",
+        "deleteConfirmMsg": "{{model}} will be permanently deleted. You will need to re-download it to use it again."
+    },
+    "actions": {
+        "copy": "Copy",
+        "copied": "Copied!",
+        "edit": "Edit",
+        "save": "Save",
+        "saving": "Saving...",
+        "cancel": "Cancel",
+        "quit": "Quit",
+        "delete": "Delete",
+        "download": "Download",
+        "use": "Use",
+        "export": "Export",
+        "listen": "Listen",
+        "closeAudio": "Close audio",
+        "loadingAudio": "Loading...",
+        "selectLocalFile": "Select a local .bin file"
+    },
+    "theme": {
+        "light": "Light mode",
+        "dark": "Dark mode"
+    },
+    "confirm": {
+        "cancelTranscription": "Cancel transcription?",
+        "cancelTranscriptionMsg": "The ongoing transcription will be interrupted. Text already transcribed will not be saved.",
+        "cancelTranscriptionBtn": "Cancel transcription",
+        "cancel": "Cancel"
+    },
+    "cpu": {
+        "label": "CPU usage",
+        "slow": "🐢 Slow - machine very responsive",
+        "balanced": "⚖️ Balanced - good compromise",
+        "fast": "⚡ Fast - recommended",
+        "max": "🚀 Maximum - fastest transcription"
+    },
+    "models": {
+        "tiny": { "desc": "Fast, limited configs" },
+        "base": { "desc": "Good speed/quality balance" },
+        "small": { "desc": "Recommended" },
+        "medium": { "desc": "Good quality" },
+        "large": { "desc": "Best quality" }
+    },
+    "pagination": {
+        "prev": "Previous page",
+        "next": "Next page"
+    },
+    "edit": {
+        "hint": "Ctrl+Enter to save · Esc to cancel",
+        "expand": "Show all ({{count}} characters)"
+    },
+    "sidebar": {
+        "transcribing": "Transcribing",
+        "transcribingPercent": "Transcribing - {{percent}}%"
+    }
+}

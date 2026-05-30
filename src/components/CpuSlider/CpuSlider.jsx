@@ -1,17 +1,20 @@
+import { useTranslation } from "react-i18next";
 import style from "./CpuSlider.module.css";
 
-const HINTS = {
-    25:  "🐢 Lent - machine très réactive",
-    50:  "⚖️ Équilibré - bon compromis",
-    75:  "⚡ Rapide - recommandé",
-    100: "🚀 Maximum - transcription la plus rapide",
-};
-
 function CpuSlider({ value, onChange }) {
+    const { t } = useTranslation();
+
+    const HINTS = {
+        25:  t("cpu.slow"),
+        50:  t("cpu.balanced"),
+        75:  t("cpu.fast"),
+        100: t("cpu.max"),
+    };
+
     return (
         <>
             <div className={style.sliderRow}>
-                <span className={style.sliderLabel}>Utilisation CPU</span>
+                <span className={style.sliderLabel}>{t("cpu.label")}</span>
                 <div className={style.sliderWrapper}>
                     <input
                         type="range"

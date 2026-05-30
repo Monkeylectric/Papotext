@@ -55,8 +55,8 @@
 }
 
 .btnConfirm {
-    background: rgba(230, 57, 70, 0.1);
-    border: 1px solid rgba(230, 57, 70, 0.3);
+    background: var(--color-danger-a10);
+    border: 1px solid var(--color-danger-a30);
     color: var(--color-danger);
     padding: var(--space-sm) var(--space-md);
     font-size: var(--font-size-sm);
@@ -64,5 +64,5 @@
 }
 
 .btnConfirm:hover {
-    background: rgba(230, 57, 70, 0.2);
+    background: var(--color-danger-a20);
 }

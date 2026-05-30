@@ -18,5 +18,5 @@
 .btnLocal:hover {
     border-color: var(--color-accent);
     color: var(--color-accent);
-    background-color: rgba(67, 97, 238, 0.04);
+    background-color: var(--color-accent-a04);
 }

@@ -1,7 +1,10 @@
+import { useTranslation } from "react-i18next";
 import { Download, Trash2, Check, Loader2 } from "lucide-react";
 import style from "./ModelCard.module.css";
 
 function ModelCard({ model, isActive, isInstalled, isDownloading, progress, onUse, onDelete, onDownload }) {
+    const { t } = useTranslation();
+
     return (
         <div className={`${style.modelCard} ${isActive ? style.modelCardActive : ""}`}>
             <div className={style.modelCardHeader}>
@@ -11,7 +14,7 @@ function ModelCard({ model, isActive, isInstalled, isDownloading, progress, onUs
                 </div>
                 {isActive && (
                     <span className={style.badgeActive}>
-                        <Check size={13} /> Actif
+                        <Check size={13} /> {t("settings.activeModelCard")}
                     </span>
                 )}
             </div>
@@ -22,7 +25,7 @@ function ModelCard({ model, isActive, isInstalled, isDownloading, progress, onUs
                 {!isActive && isInstalled && (
                     <>
                         <button className={style.btnUse} onClick={onUse}>
-                            Utiliser
+                            {t("actions.use")}
                         </button>
                         {model.name !== "ggml-small.bin" && (
                             <button className={style.btnDelete} onClick={onDelete}>
@@ -33,7 +36,7 @@ function ModelCard({ model, isActive, isInstalled, isDownloading, progress, onUs
                 )}
                 {!isInstalled && !isDownloading && (
                     <button className={style.btnDownload} onClick={onDownload}>
-                        <Download size={14} /> Télécharger
+                        <Download size={14} /> {t("actions.download")}
                     </button>
                 )}
                 {isDownloading && (

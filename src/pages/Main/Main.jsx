@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { listen } from "@tauri-apps/api/event";
@@ -9,6 +10,7 @@ import LiveTranscription from "@components/LiveTranscription/LiveTranscription";
 import style from "./Main.module.css";
 
 function Main({ isTranscribing, onTranscribingChange, transcriptionProgress, onProgressChange, isCancelling, onCancel, transcriptionError, onErrorChange }) {
+    const { t }                             = useTranslation();
     const [audioPath, setAudioPath]         = useState("");
     const [transcription, setTranscription] = useState("");
     const [recording, setRecording]         = useState(false);
@@ -46,7 +48,7 @@ function Main({ isTranscribing, onTranscribingChange, transcriptionProgress, onP
                 // Stocker chaque segment par son index
                 segmentsRef.current[e.payload.segment] = e.payload.partial_text;
 
-                console.log("segments stockés", {...segmentsRef.current});
+                // console.log("segments stockés", {...segmentsRef.current});
 
                 // Reconstruire le texte dans l'ordre des segments reçus jusqu'ici
                 const ordered = Object.keys(segmentsRef.current)
@@ -56,7 +58,7 @@ function Main({ isTranscribing, onTranscribingChange, transcriptionProgress, onP
                     .join(" ")
                     .trim();
 
-                console.log("texte reconstruit", ordered);
+                // console.log("texte reconstruit", ordered);
 
                 setTranscription(ordered);
 
@@ -154,7 +156,7 @@ function Main({ isTranscribing, onTranscribingChange, transcriptionProgress, onP
             recordChunk();
             setRecording(true);
         } catch (e) {
-            setError("Impossible d'accéder au microphone : " + e.message);
+            setError(t("live.micError") + e.message);
         }
     }
     
@@ -188,7 +190,7 @@ function Main({ isTranscribing, onTranscribingChange, transcriptionProgress, onP
     return (
         <div className={style.page}>
             <div className={style.pageHeader}>
-                <h1 className={style.pageTitle}>Transcription Audio</h1>
+                <h1 className={style.pageTitle}>{t("main.title")}</h1>
 
                 <TranslateToggle value={translateMode} onChange={setTranslateMode} />
             </div>

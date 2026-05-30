@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import style from "./SegmentedText.module.css";
 
 const TRUNCATE_LIMIT = 2000;
 
 function SegmentedText({ text, segments, activeSegIdx, readonly = false }) {
+    const { t }                   = useTranslation();
     const [expanded, setExpanded] = useState(false);
 
     // Pas de truncation si audio actif
@@ -30,7 +32,7 @@ function SegmentedText({ text, segments, activeSegIdx, readonly = false }) {
                 <>
                     <span className={style.truncateEllipsis}>...</span>
                     <button className={style.btnExpand} onClick={() => setExpanded(true)}>
-                        Voir tout ({text.length} caractères)
+                        {t("edit.expand", { count: text.length })}
                     </button>
                 </>
             )}

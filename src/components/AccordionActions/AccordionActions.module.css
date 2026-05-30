@@ -19,7 +19,7 @@
 .btnAudio:hover:not(:disabled) {
     border-color: var(--color-accent);
     color: var(--color-accent);
-    background-color: rgba(76, 201, 240, 0.05);
+    background-color: var(--color-accent-a05);
 }
 
 .btnEdit {
@@ -36,7 +36,7 @@
 .btnEdit:hover {
     border-color: var(--color-accent);
     color: var(--color-accent);
-    background-color: rgba(67, 97, 238, 0.05);
+    background-color: var(--color-accent-a05);
 }
 
 .btnCopy {

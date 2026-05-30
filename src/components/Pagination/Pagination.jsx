@@ -1,7 +1,10 @@
+import { useTranslation } from "react-i18next";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import style from "./Pagination.module.css";
 
 function Pagination({ page, totalPages, onPageChange }) {
+    const { t } = useTranslation();
+
     /// Génère la liste des numéros de pages à afficher
     function buildPageNumbers(current, total) {
         if (total <= 7) {
@@ -30,7 +33,7 @@ function Pagination({ page, totalPages, onPageChange }) {
                 className={style.pageBtn}
                 onClick={() => onPageChange(page - 1)}
                 disabled={page === 1}
-                aria-label="Page précédente"
+                aria-label={t("pagination.prev")}
             >
                 <ChevronLeft size={16} />
             </button>
@@ -53,7 +56,7 @@ function Pagination({ page, totalPages, onPageChange }) {
                 className={style.pageBtn}
                 onClick={() => onPageChange(page + 1)}
                 disabled={page === totalPages}
-                aria-label="Page suivante"
+                aria-label={t("pagination.next")}
             >
                 <ChevronRight size={16} />
             </button>

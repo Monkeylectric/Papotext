@@ -1,9 +1,10 @@
+import { useTranslation } from "react-i18next";
 import { Copy, Check, Pencil, X, Save, Volume2, VolumeX, Loader2 } from "lucide-react";
 import ExportDropdown from "@components/ExportDropdown/ExportDropdown";
 import style from "./AccordionActions.module.css";
 
 function AccordionActions({
-    transcription: t,
+    transcription,
     isEditing,
     isAudioOpen,
     loadingAudio,
@@ -15,13 +16,15 @@ function AccordionActions({
     onSaveEdit,
     onCopy,
 }) {
-    const audioButton = t.audio_path && (
-        <button className={style.btnAudio} onClick={(e) => onLoadAudio(t, e)} disabled={loadingAudio}>
+    const { t } = useTranslation();
+
+    const audioButton = transcription.audio_path && (
+        <button className={style.btnAudio} onClick={(e) => onLoadAudio(transcription, e)} disabled={loadingAudio}>
             {loadingAudio
-                ? <><Loader2 size={14} className="spinning" /> Chargement...</>
+                ? <><Loader2 size={14} className="spinning" /> {t("actions.loadingAudio")}</>
                 : isAudioOpen
-                    ? <><VolumeX size={14} /> Fermer l'audio</>
-                    : <><Volume2 size={14} /> Écouter</>
+                    ? <><VolumeX size={14} /> {t("actions.closeAudio")}</>
+                    : <><Volume2 size={14} /> {t("actions.listen")}</>
             }
         </button>
     );
@@ -31,12 +34,12 @@ function AccordionActions({
             <div className={style.actions}>
                 {audioButton}
                 <button className={style.btnCancel} onClick={onCancelEdit}>
-                    <X size={14} /> Quitter
+                    <X size={14} /> {t("actions.quit")}
                 </button>
-                <button className={style.btnSave} onClick={() => onSaveEdit(t.id)} disabled={saving}>
+                <button className={style.btnSave} onClick={() => onSaveEdit(transcription.id)} disabled={saving}>
                     {saving
-                        ? <><Loader2 size={14} className="spinning" /> Sauvegarde...</>
-                        : <><Save size={14} /> Enregistrer</>
+                        ? <><Loader2 size={14} className="spinning" /> {t("actions.saving")}</>
+                        : <><Save size={14} /> {t("actions.save")}</>
                     }
                 </button>
             </div>
@@ -46,13 +49,13 @@ function AccordionActions({
     return (
         <div className={style.actions}>
             {audioButton}
-            <button className={style.btnEdit} onClick={(e) => onStartEdit(t, e)}>
-                <Pencil size={14} /> Modifier
+            <button className={style.btnEdit} onClick={(e) => onStartEdit(transcription, e)}>
+                <Pencil size={14} /> {t("actions.edit")}
             </button>
-            <button className={style.btnCopy} onClick={() => onCopy(t.text)}>
-                {copied ? <><Check size={14} /> Copié !</> : <><Copy size={14} /> Copier</>}
+            <button className={style.btnCopy} onClick={() => onCopy(transcription.text)}>
+                {copied ? <><Check size={14} /> {t("actions.copied")}</> : <><Copy size={14} /> {t("actions.copy")}</>}
             </button>
-            <ExportDropdown text={t.text} segments={t.segments} filename={t.filename} />
+            <ExportDropdown text={transcription.text} segments={transcription.segments} filename={transcription.filename} />
         </div>
     );
 }

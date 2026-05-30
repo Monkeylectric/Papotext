@@ -1,7 +1,10 @@
+import { useTranslation } from "react-i18next";
 import { Trash2 } from "lucide-react";
 import styles from "./ConfirmModal.module.css";
 
 function ConfirmModal({ title, message, onConfirm, onCancel, confirmLabel = "Supprimer" }) {
+    const { t } = useTranslation();
+    
     return (
         <div className={styles.overlay} onClick={onCancel}>
             <div className={styles.modal} onClick={e => e.stopPropagation()}>
@@ -12,7 +15,7 @@ function ConfirmModal({ title, message, onConfirm, onCancel, confirmLabel = "Sup
                 <p className={styles.message}>{message}</p>
                 <div className={styles.actions}>
                     <button className={styles.btnCancel} onClick={onCancel}>
-                        Annuler
+                        {t("confirm.cancel")}
                     </button>
                     <button className={styles.btnConfirm} onClick={onConfirm}>
                         {confirmLabel}

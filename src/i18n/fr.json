@@ -1,0 +1,109 @@
+{
+    "nav": {
+        "transcription": "Transcription",
+        "history": "Historique",
+        "settings": "Paramètres"
+    },
+    "main": {
+        "title": "Transcription Audio",
+        "translateToggle": "Traduire en anglais",
+        "fromFile": "Depuis un fichier",
+        "chooseFile": "Choisir un fichier audio",
+        "transcribe": "Transcrire",
+        "transcribing": "Transcription en cours...",
+        "cancel": "Annuler",
+        "cancelling": "Annulation en cours...",
+        "segment": "Segment {{current}} / {{total}}",
+        "result": "Résultat"
+    },
+    "live": {
+        "title": "En direct",
+        "start": "Démarrer l'enregistrement",
+        "stop": "Arrêter",
+        "recording": "Enregistrement en cours...",
+        "result": "Transcription en direct",
+        "micError": "Impossible d'accéder au microphone : {{message}}"
+    },
+    "history": {
+        "title": "Historique",
+        "search": "Rechercher par nom de fichier ou contenu...",
+        "empty": "Aucune transcription",
+        "emptyDesc": "Les transcriptions apparaîtront ici.",
+        "loading": "Chargement...",
+        "deleteConfirmTitle": "Supprimer cette transcription ?",
+        "deleteConfirmMsg": "Cette transcription sera supprimée définitivement. Cette action est irréversible.",
+        "stats": {
+            "total": "Transcriptions",
+            "topModel": "Modèle le plus utilisé",
+            "latestFile": "Dernier fichier"
+        }
+    },
+    "settings": {
+        "title": "Paramètres",
+        "modelSection": "Modèle de transcription",
+        "modelDesc": "Le modèle détermine la qualité et la vitesse de transcription.",
+        "activeModel": "Modèle actif : {{activeModel}}",
+        "activeModelCard": "Actif",
+        "localSection": "Modèle local",
+        "localDesc": "Tu peux télécharger manuellement un modèle depuis <0>HuggingFace</0> et le sélectionner ici.",
+        "perfSection": "Performances",
+        "perfDesc": "Ajustez l'utilisation du CPU pendant la transcription. Une valeur plus basse laisse la machine plus réactive.",
+        "language": "Langue",
+        "downloading": "Téléchargement de {{model}}...",
+        "deleteConfirmTitle": "Supprimer ce modèle ?",
+        "deleteConfirmMsg": "{{model}} sera supprimé définitivement. Vous devrez le retélécharger pour l'utiliser à nouveau."
+    },
+    "actions": {
+        "copy": "Copier",
+        "copied": "Copié !",
+        "edit": "Modifier",
+        "save": "Enregistrer",
+        "saving": "Sauvegarde...",
+        "cancel": "Annuler",
+        "quit": "Quitter",
+        "delete": "Supprimer",
+        "download": "Télécharger",
+        "use": "Utiliser",
+        "export": "Exporter",
+        "listen": "Écouter",
+        "closeAudio": "Fermer l'audio",
+        "loadingAudio": "Chargement...",
+        "selectLocalFile": "Sélectionner un fichier .bin local"
+    },
+    "theme": {
+        "light": "Mode clair",
+        "dark": "Mode sombre"
+    },
+    "confirm": {
+        "cancelTranscription": "Annuler la transcription ?",
+        "cancelTranscriptionMsg": "La transcription en cours sera interrompue. Le texte déjà transcrit ne sera pas sauvegardé.",
+        "cancelTranscriptionBtn": "Annuler la transcription",
+        "cancel": "Annuler"
+    },
+    "cpu": {
+        "label": "Utilisation CPU",
+        "slow": "🐢 Lent - machine très réactive",
+        "balanced": "⚖️ Équilibré - bon compromis",
+        "fast": "⚡ Rapide - recommandé",
+        "max": "🚀 Maximum - transcription la plus rapide"
+    },
+    "models": {
+        "tiny": { "desc": "Rapide, configs limitées" },
+        "base": { "desc": "Bon compromis vitesse/qualité" },
+        "small": { "desc": "Recommandé" },
+        "medium": { "desc": "Bonne qualité" },
+        "large": { "desc": "Meilleure qualité" }
+    },
+    "pagination": {
+        "prev": "Page précédente",
+        "next": "Page suivante"
+    },
+    "edit": {
+        "hint": "Ctrl+Entrée pour sauvegarder · Échap pour annuler",
+        "expand": "Voir tout ({{count}} caractères)"
+    },
+    "sidebar": {
+        "transcribing": "Transcription en cours",
+        "transcribingPercent": "Transcription en cours - {{percent}}%"
+    }
+}

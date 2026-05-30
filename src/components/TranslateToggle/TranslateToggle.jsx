@@ -1,6 +1,9 @@
+import { useTranslation } from "react-i18next";
 import style from "./TranslateToggle.module.css";
 
 function TranslateToggle({ value, onChange }) {
+    const { t } = useTranslation();
+
     return (
         <div className={style.translateToggle}>
             <label className={style.toggleLabel}>
@@ -10,7 +13,7 @@ function TranslateToggle({ value, onChange }) {
                 >
                     <div className={style.toggleThumb} />
                 </div>
-                <span>Traduire en anglais</span>
+                <span>{t("main.translateToggle")}</span>
             </label>
         </div>
     );

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { Copy, Inbox, Loader2, Save, Search, X } from "lucide-react";
 import ConfirmModal from "@components/ConfirmModal/ConfirmModal";
@@ -9,6 +10,7 @@ import Pagination from "@components/Pagination/Pagination";
 import style from "./History.module.css";
 
 function History() {
+    const { t }                               = useTranslation();
     const [transcriptions, setTranscriptions] = useState([]);
     const [selected, setSelected]             = useState(null);
     const [loading, setLoading]               = useState(true);
@@ -214,17 +216,17 @@ function History() {
     }
     
     if (loading) {
-        return <div className={style.loading}><Loader2 size={15} className="spinning" /> Chargement...</div>;
+        return <div className={style.loading}><Loader2 size={15} className="spinning" /> {t("history.loading")}</div>;
     }
     
     if (total === 0) {
         return (
             <div className={style.page}>
-                <h1 className={style.pageTitle}>Historique</h1>
+                <h1 className={style.pageTitle}>{t("history.title")}</h1>
                 <div className={style.empty}>
                     <div className={style.emptyIcon}><Inbox size={48} /></div>
-                    <p className={style.emptyText}>Aucune transcription</p>
-                    <p className={style.emptyDesc}>Les transcriptions apparaîtront ici.</p>
+                    <p className={style.emptyText}>{t("history.empty")}</p>
+                    <p className={style.emptyDesc}>{t("history.emptyDesc")}</p>
                 </div>
             </div>
         );
@@ -235,15 +237,15 @@ function History() {
             {/* Modale de confirmation */}
             {confirmId !== null && (
                 <ConfirmModal
-                    title="Supprimer cette transcription ?"
-                    message={`Cette transcription sera supprimée définitivement. Cette action est irréversible.`}
+                    title={t("history.deleteConfirmTitle")}
+                    message={t("history.deleteConfirmMsg")}
                     onConfirm={() => deleteTranscription(confirmId)}
                     onCancel={() => setConfirmId(null)}
                 />
             )}
 
             <div className={style.pageHeader}>
-                <h1 className={style.pageTitle}>Historique</h1>
+                <h1 className={style.pageTitle}>{t("history.title")}</h1>
                 <HistoryStats />
             </div>
 
@@ -252,7 +254,7 @@ function History() {
                 <input
                     type="text"
                     className={style.searchInput}
-                    placeholder="Rechercher par nom de fichier ou contenu..."
+                    placeholder={t("history.search")}
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
                 />
@@ -264,20 +266,20 @@ function History() {
             </div>
         
             <div className={style.list}>
-                {transcriptions.map((t) => (
-                    <div key={t.id}>
+                {transcriptions.map((transcription) => (
+                    <div key={transcription.id}>
                         {/* Carte */}
                         <TranscriptionCard 
-                            transcription={t} 
-                            isActive={selected?.id === t.id} 
+                            transcription={transcription} 
+                            isActive={selected?.id === transcription.id} 
                             onToggle={toggleSelected} 
                             onDelete={setConfirmId}
                         />
 
                         {/* Accordion — s'ouvre sous la carte */}
-                        {selected?.id === t.id && (
+                        {selected?.id === transcription.id && (
                             <TranscriptionAccordion
-                                transcription={t}
+                                transcription={transcription}
                                 audioSrc={audioSrc}
                                 audioRef={audioRef}
                                 activeSegIdx={activeSegIdx}

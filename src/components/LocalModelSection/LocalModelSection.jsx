@@ -1,18 +1,22 @@
+import { Trans, useTranslation } from "react-i18next";
 import { FolderOpen } from "lucide-react";
 import style from "./LocalModelSection.module.css";
 
 function LocalModelSection({ onSelectFile }) {
+    const { t } = useTranslation();
+    
     return (
         <>
             <p className={style.desc}>
-                Tu peux télécharger manuellement un modèle depuis{" "}
-                <a href="https://huggingface.co/ggerganov/whisper.cpp" target="_blank">
-                    HuggingFace
-                </a>{" "}
-                et le sélectionner ici.
+                <Trans
+                    i18nKey="settings.localDesc"
+                    components={[
+                        <a href="https://huggingface.co/ggerganov/whisper.cpp" target="_blank" />,
+                    ]}
+                />
             </p>
             <button className={style.btnLocal} onClick={onSelectFile}>
-                <FolderOpen size={16} /> Sélectionner un fichier .bin local
+                <FolderOpen size={16} /> {t("actions.selectLocalFile")}
             </button>
         </>
     );

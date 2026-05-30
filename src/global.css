@@ -1,7 +1,7 @@
 /* Variables */
 :root {
     /* Couleurs */
-    --color-bg:          #f8f9fa;
+    /* --color-bg:          #f8f9fa;
     --color-bg-card:     #ffffff;
     --color-bg-hover:    #f1f3f5;
     --color-border:      #e9ecef;
@@ -12,7 +12,43 @@
     --color-success:     #2dc653;
     --color-danger:      #e63946;
     --color-danger-hover:#c1121f;
+    --color-warning:     #f4a261; */
+    --color-bg:          #faf7f4;
+    --color-bg-card:     #ffffff;
+    --color-bg-hover:    #f2ebe4;
+    --color-border:      #e4d8cc;
+    --color-text:        #1a1108;
+    --color-text-muted:  #8a7060;
+    --color-accent:      #f47c41;
+    --color-accent-hover:#e06528;
+    --color-success:     #2dc653;
+    --color-danger:      #e63946;
+    --color-danger-hover:#c1121f;
     --color-warning:     #f4a261;
+
+    /* Canaux RGB pour les variantes alpha */
+    --color-accent-rgb:  244, 124, 65;
+    --color-danger-rgb:  230, 57, 70;
+    --color-success-rgb: 45, 198, 83;
+
+    /* Variantes alpha — accent */
+    --color-accent-a04: rgba(var(--color-accent-rgb), 0.04);
+    --color-accent-a05: rgba(var(--color-accent-rgb), 0.05);
+    --color-accent-a08: rgba(var(--color-accent-rgb), 0.08);
+    --color-accent-a10: rgba(var(--color-accent-rgb), 0.10);
+    --color-accent-a15: rgba(var(--color-accent-rgb), 0.15);
+    --color-accent-a20: rgba(var(--color-accent-rgb), 0.20);
+    --color-accent-a30: rgba(var(--color-accent-rgb), 0.30);
+
+    /* Variantes alpha — danger */
+    --color-danger-a08: rgba(var(--color-danger-rgb), 0.08);
+    --color-danger-a10: rgba(var(--color-danger-rgb), 0.10);
+    --color-danger-a20: rgba(var(--color-danger-rgb), 0.20);
+    --color-danger-a30: rgba(var(--color-danger-rgb), 0.30);
+    --color-danger-a40: rgba(var(--color-danger-rgb), 0.40);
+
+    /* Variantes alpha — success */
+    --color-success-a10: rgba(var(--color-success-rgb), 0.10);
 
     /* Typographie */
     --font-family: 'Inter', 'Segoe UI', Avenir, Helvetica, Arial, sans-serif;
@@ -50,26 +86,42 @@
 
 /* Dark mode */
 [data-theme="dark"] {
-    --color-bg:         #1a1b1e;
+    /* --color-bg:         #1a1b1e;
     --color-bg-card:    #25262b;
     --color-bg-hover:   #2c2d32;
     --color-border:     #373a40;
     --color-text:       #e9ecef;
     --color-text-muted: #909296;
     --color-accent:     #4cc9f0;
-    --color-accent-hover:#3db8de;
+    --color-accent-hover:#3db8de; */
+    --color-bg:         #1c1510;
+    --color-bg-card:    #26201a;
+    --color-bg-hover:   #312820;
+    --color-border:     #44362a;
+    --color-text:       #f0e8e0;
+    --color-text-muted: #a08878;
+    --color-accent:     #f47c41;
+    --color-accent-hover:#ff9560;
 }
 
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-        --color-bg:         #1a1b1e;
+        /* --color-bg:         #1a1b1e;
         --color-bg-card:    #25262b;
         --color-bg-hover:   #2c2d32;
         --color-border:     #373a40;
         --color-text:       #e9ecef;
         --color-text-muted: #909296;
         --color-accent:     #4cc9f0;
-        --color-accent-hover:#3db8de;
+        --color-accent-hover:#3db8de; */
+        --color-bg:         #1c1510;
+        --color-bg-card:    #26201a;
+        --color-bg-hover:   #312820;
+        --color-border:     #44362a;
+        --color-text:       #f0e8e0;
+        --color-text-muted: #a08878;
+        --color-accent:     #f47c41;
+        --color-accent-hover:#ff9560;
     }
 }
 

@@ -74,6 +74,6 @@
 
 .btnDelete:hover {
     color: var(--color-danger);
-    background-color: rgba(230, 57, 70, 0.08);
+    background-color: var(--color-danger-a08);
     transform: none;
 }

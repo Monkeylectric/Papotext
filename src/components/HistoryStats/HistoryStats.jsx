@@ -1,9 +1,11 @@
+import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { useState, useEffect } from "react";
 import { FileAudio, Cpu, Hash } from "lucide-react";
 import style from "./HistoryStats.module.css";
 
 function HistoryStats() {
+    const { t }             = useTranslation();
     const [stats, setStats] = useState(null);
 
     useEffect(() => {
@@ -17,7 +19,7 @@ function HistoryStats() {
             <div className={style.stat}>
                 <Hash size={14} />
                 <div className={style.statContent}>
-                    <span className={style.statLabel}>Transcriptions</span>
+                    <span className={style.statLabel}>{t("history.stats.total")}</span>
                     <span className={style.statValue}>{stats.total}</span>
                 </div>
             </div>
@@ -25,7 +27,7 @@ function HistoryStats() {
                 <div className={style.stat}>
                     <Cpu size={14} />
                     <div className={style.statContent}>
-                        <span className={style.statLabel}>Modèle le plus utilisé</span>
+                        <span className={style.statLabel}>{t("history.stats.topModel")}</span>
                         <span className={style.statValue}>{stats.top_model}</span>
                     </div>
                 </div>
@@ -34,7 +36,7 @@ function HistoryStats() {
                 <div className={style.stat}>
                     <FileAudio size={14} />
                     <div className={style.statContent}>
-                        <span className={style.statLabel}>Dernier fichier</span>
+                        <span className={style.statLabel}>{t("history.stats.latestFile")}</span>
                         <span className={style.statValue}>{stats.latest_filename}</span>
                     </div>
                 </div>
