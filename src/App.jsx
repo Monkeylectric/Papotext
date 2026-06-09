@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useTranslation } from "react-i18next";
-import { Mic, ClipboardList, Settings as SettingsLucid, Sun, Moon, Loader2 } from "lucide-react";
+import { Mic, ClipboardList, Settings as SettingsLucid, Sun, Moon, Loader2, Download } from "lucide-react";
+import { useUpdater } from "@hooks/useUpdater";
 import logo from "@assets/logo.svg";
 import Main from "@pages/Main/Main";
 import History from "@pages/History/History";
@@ -20,6 +21,7 @@ function App() {
     const [transcriptionError, setTranscriptionError]       = useState("");
     const [showCancelConfirm, setShowCancelConfirm]         = useState(false);
     const [isCancelling, setIsCancelling]                   = useState(false);
+    const { updateVersion, installing, installUpdate }      = useUpdater();
     
     useEffect(() => {
         if (theme === "auto") {
@@ -103,6 +105,18 @@ function App() {
                             {t("main.transcribing")}
                             {transcriptionProgress ? ` - ${transcriptionProgress.percent}%` : "..."}
                         </span>
+                    </div>
+                )}
+
+                {updateVersion && (
+                    <div className={styles.updateBanner}>
+                        <span>v{updateVersion} disponible</span>
+                        <button onClick={installUpdate} disabled={installing}>
+                            {installing
+                                ? <Loader2 size={12} className="spinning" />
+                                : <Download size={12} />
+                            }
+                        </button>
                     </div>
                 )}
         

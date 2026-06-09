@@ -112,3 +112,17 @@
     font-size: var(--font-size-sm);
     color: var(--color-accent);
 }
+
+.updateBanner {
+    margin: var(--space-sm) var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    background-color: var(--color-accent-a08);
+    border: 1px solid var(--color-accent-a20);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+    color: var(--color-accent);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+}

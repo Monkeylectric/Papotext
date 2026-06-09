@@ -9,6 +9,7 @@ mod history;
 mod models;
 mod settings;
 mod errors;
+mod updater;
 
 /// Structure WhisperPool qui représente un "pool" de contextes Whisper
 pub struct WhisperPool {
@@ -105,6 +106,7 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())  // Exécution de commandes shell
         .plugin(tauri_plugin_store::Builder::default().build()) // Stockage persistant clé/valeur
         .plugin(tauri_plugin_http::init())   // Requêtes HTTP
+        .plugin(tauri_plugin_updater::Builder::new().build()) // Détection de mise à jour
         // Commandes exposées au frontend
         .invoke_handler(tauri::generate_handler![
             // Audio
@@ -129,6 +131,9 @@ pub fn run() {
             history::export_as_txt,
             history::export_as_srt,
             history::get_history_stats,
+            // Updater
+            updater::check_update,
+            updater::install_update,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

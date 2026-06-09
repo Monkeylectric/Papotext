@@ -41,5 +41,12 @@
     "macOS": {
         "infoPlist": "Info.plist"
     }
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": ["https://papotext.com/update/latest.json"],
+      "dialog": false,
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IERDMjBFRDMwNDBGRTQ3MzEKUldReFIvNUFNTzBnM0lNalIxVW1aeGx4N0tVL2UzYmVVbkZxbEd5VjVJVS8zaTNjQy9BY1E5WnoK"
+    }
   }
 }
