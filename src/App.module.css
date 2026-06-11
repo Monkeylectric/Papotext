@@ -126,3 +126,16 @@
     justify-content: space-between;
     gap: var(--space-sm);
 }
+
+.updateLink {
+    background: transparent;
+    padding: 0;
+    color: var(--color-accent);
+    display: flex;
+    align-items: center;
+}
+
+.updateLink:hover {
+    color: var(--color-accent-hover);
+    background: transparent;
+}

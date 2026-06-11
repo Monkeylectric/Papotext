@@ -3,7 +3,6 @@ import { invoke } from "@tauri-apps/api/core";
 
 export function useUpdater() {
     const [updateVersion, setUpdateVersion] = useState(null);
-    const [installing, setInstalling]       = useState(false);
 
     useEffect(() => {
         invoke("check_update")
@@ -11,16 +10,5 @@ export function useUpdater() {
             .catch(() => {}); // silencieux si pas de réseau
     }, []);
 
-    async function installUpdate() {
-        setInstalling(true);
-        try {
-            await invoke("install_update");
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setInstalling(false);
-        }
-    }
-
-    return { updateVersion, installing, installUpdate };
+    return { updateVersion };
 }

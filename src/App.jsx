@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { useTranslation } from "react-i18next";
 import { Mic, ClipboardList, Settings as SettingsLucid, Sun, Moon, Loader2, Download } from "lucide-react";
 import { useUpdater } from "@hooks/useUpdater";
@@ -111,11 +112,11 @@ function App() {
                 {updateVersion && (
                     <div className={styles.updateBanner}>
                         <span>v{updateVersion} disponible</span>
-                        <button onClick={installUpdate} disabled={installing}>
-                            {installing
-                                ? <Loader2 size={12} className="spinning" />
-                                : <Download size={12} />
-                            }
+                        <button 
+                            className={styles.updateLink}
+                            onClick={() => openUrl("https://papotext.com/")}
+                        >
+                            <Download size={12} /> Nouvelle version disponible
                         </button>
                     </div>
                 )}

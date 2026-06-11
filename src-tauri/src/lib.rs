@@ -133,7 +133,6 @@ pub fn run() {
             history::get_history_stats,
             // Updater
             updater::check_update,
-            updater::install_update,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
