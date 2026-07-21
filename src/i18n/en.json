@@ -7,6 +7,8 @@
     "main": {
         "title": "Audio Transcription",
         "translateToggle": "Translate to English",
+        "languageSelect": "Language",
+        "languageAuto": "Auto-detection",
         "fromFile": "From a file",
         "chooseFile": "Choose an audio file",
         "transcribe": "Transcribe",

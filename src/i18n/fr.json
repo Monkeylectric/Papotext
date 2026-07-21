@@ -6,6 +6,8 @@
     },
     "main": {
         "title": "Transcription Audio",
+        "languageSelect": "Langue",
+        "languageAuto": "Détection auto",
         "translateToggle": "Traduire en anglais",
         "fromFile": "Depuis un fichier",
         "chooseFile": "Choisir un fichier audio",

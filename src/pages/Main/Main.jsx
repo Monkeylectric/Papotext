@@ -8,6 +8,7 @@ import { translateError } from "@/i18n/errorHelper";
 import TranslateToggle from "@components/TranslateToggle/TranslateToggle";
 import FileTranscription from "@components/FileTranscription/FileTranscription";
 import LiveTranscription from "@components/LiveTranscription/LiveTranscription";
+import LanguageSelect from "@components/LanguageSelect/LanguageSelect";
 import style from "./Main.module.css";
 
 function Main({ isTranscribing, onTranscribingChange, transcriptionProgress, onProgressChange, isCancelling, onCancel, transcriptionError, onErrorChange }) {
@@ -19,6 +20,7 @@ function Main({ isTranscribing, onTranscribingChange, transcriptionProgress, onP
     const [copiedFile, setCopiedFile]       = useState(false);
     const [copiedLive, setCopiedLive]       = useState(false);
     const [translateMode, setTranslateMode] = useState(false);
+    const [language, setLanguage]           = useState("auto");
     const mediaRecorderRef                  = useRef(null);
     const chunkIntervalRef                  = useRef(null);
     const transcriptionRef                  = useRef("");
@@ -102,7 +104,7 @@ function Main({ isTranscribing, onTranscribingChange, transcriptionProgress, onP
         setProgress(null);
         
         try {
-            const result = await invoke("transcribe_audio", { audioPath, translate: translateMode });
+            const result = await invoke("transcribe_audio", { audioPath, translate: translateMode, language });
             // setTranscription(result);
         } catch (e) {
             setError(translateError(String(e)));
@@ -136,6 +138,7 @@ function Main({ isTranscribing, onTranscribingChange, transcriptionProgress, onP
                             audioData,
                             translate: translateMode,
                             promptTokens: promptTokensRef.current,
+                            language
                         });
 
                         // Stocker les tokens pour le prochain chunk
@@ -193,6 +196,7 @@ function Main({ isTranscribing, onTranscribingChange, transcriptionProgress, onP
             <div className={style.pageHeader}>
                 <h1 className={style.pageTitle}>{t("main.title")}</h1>
 
+                <LanguageSelect value={language} onChange={setLanguage} />
                 <TranslateToggle value={translateMode} onChange={setTranslateMode} />
             </div>
         

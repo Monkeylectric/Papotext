@@ -1,0 +1,33 @@
+.languageSelect {
+    display: flex;
+    justify-content: center;
+}
+
+.selectLabel {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    user-select: none;
+}
+
+.select {
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-card);
+    color: var(--color-text);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: border-color var(--transition);
+}
+
+.select:hover {
+    border-color: var(--color-accent);
+}
+
+.select:focus {
+    outline: none;
+    border-color: var(--color-accent);
+}

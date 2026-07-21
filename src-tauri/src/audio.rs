@@ -397,6 +397,7 @@ async fn transcribe_segment_async(
     translate: bool,
     threads_per_segment: i32,
     is_cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    language: &str,
 ) -> Result<(String, Vec<Segment>), String> {
     // Création du fichier temporaire
     let temp_path = std::env::temp_dir()
@@ -441,6 +442,7 @@ async fn transcribe_segment_async(
     }
 
     let temp_path_clone = temp_path.clone();
+    let language_owned = language.to_string();
 
     // Travail CPU-bound, évite de bloquer le runtile async Tokio
     tokio::task::spawn_blocking(move || {
@@ -468,7 +470,7 @@ async fn transcribe_segment_async(
             beam_size,
             patience: 1.0,
         });
-        params.set_language(Some("auto")); // Détection automatique langue
+        params.set_language(Some(language_owned.as_str())); // Détection automatique langue
         params.set_print_progress(false);  // Désactive logs progression
         params.set_temperature(0.0);       // transcription déterministe
         params.set_translate(translate);   // Active traduction si coché
@@ -582,6 +584,7 @@ async fn transcribe_short(
     state: tauri::State<'_, AppState>,
     selected_model: String,
     translate: bool,
+    language: String,
 ) -> Result<String, String> {
     // Réinitialisation du flag d'annulation
     state.is_cancelled.store(false, std::sync::atomic::Ordering::SeqCst);
@@ -626,7 +629,7 @@ async fn transcribe_short(
             beam_size: 5,
             patience: 1.0,
         });
-        params.set_language(Some("auto"));
+        params.set_language(Some(language.as_str()));
         params.set_print_progress(false);
         params.set_temperature(0.0);
         params.set_translate(translate);
@@ -701,6 +704,7 @@ pub async fn transcribe_audio(
     app: tauri::AppHandle,
     state: tauri::State<'_, AppState>,
     translate: bool,
+    language: String,
 ) -> Result<String, String> {
     // Verrou contre les transcriptions concurrentes
     {
@@ -714,7 +718,7 @@ pub async fn transcribe_audio(
     } // flag libéré ici, les autres locks peuvent être pris librement
 
     // Wrapper pour garantir que le flag est remis à false même en cas d'erreur
-    let result = transcribe_audio_inner(audio_path, app, state.clone(), translate)
+    let result = transcribe_audio_inner(audio_path, app, state.clone(), translate, language)
         .await;
 
     *state.is_transcribing.lock()
@@ -729,6 +733,7 @@ pub async fn transcribe_audio_inner(
     app: tauri::AppHandle,
     state: tauri::State<'_, AppState>,
     translate: bool,
+    language: String,
 ) -> Result<String, String> {
     // Réinitialisation du flag d'annulation
     state.is_cancelled.store(false, std::sync::atomic::Ordering::SeqCst);
@@ -749,7 +754,7 @@ pub async fn transcribe_audio_inner(
 
     // Lancement de transcribe_short pour les fichiers de moins de 60 secondes
     if total_duration < 60.0 {
-        return transcribe_short(&audio_path, app, state, selected_model, translate)
+        return transcribe_short(&audio_path, app, state, selected_model, translate, language)
             .await;
     }
 
@@ -777,6 +782,7 @@ pub async fn transcribe_audio_inner(
 
     let app_arc = std::sync::Arc::new(app.clone());
     let audio_path_arc = std::sync::Arc::new(audio_path.clone());
+    let language_arc = std::sync::Arc::new(language);
 
     // Futures parallèles
     let mut futures: futures::stream::FuturesUnordered<SegmentResult> =
@@ -790,6 +796,7 @@ pub async fn transcribe_audio_inner(
         let start = *start;
         let end = *end;
         let is_cancelled_clone = is_cancelled.clone();
+        let lang_clone = language_arc.clone();
 
         // Ajout d'une tâche async au scheduler
         futures.push(tokio::spawn(async move {
@@ -803,6 +810,7 @@ pub async fn transcribe_audio_inner(
                 translate,
                 threads_per_segment,
                 is_cancelled_clone,
+                &lang_clone,
             ).await?;
 
             Ok::<(usize, String, Vec<Segment>), String>((i, text.0, text.1))
@@ -897,6 +905,7 @@ pub async fn transcribe_chunk(
     audio_data: Vec<u8>,
     translate: bool,
     prompt_tokens: Vec<i32>,
+    language: String,
 ) -> Result<(String, Vec<i32>), String> {
     // Détection du nombre de threads CPU
     let total_threads = std::thread::available_parallelism()
@@ -993,7 +1002,7 @@ pub async fn transcribe_chunk(
 
         // Configuration Greedy
         let mut params = FullParams::new(SamplingStrategy::Greedy { best_of: 1 });
-        params.set_language(Some("auto"));
+        params.set_language(Some(language.as_str()));
         params.set_print_progress(false);
         params.set_translate(translate);
         params.set_n_threads(usable_threads);
