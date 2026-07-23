@@ -5,11 +5,17 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { listen } from "@tauri-apps/api/event";
 import { AlertCircle } from "lucide-react";
 import { translateError } from "@/i18n/errorHelper";
+import { createSilenceDetector } from "@utils/silenceDetector";
 import TranslateToggle from "@components/TranslateToggle/TranslateToggle";
 import FileTranscription from "@components/FileTranscription/FileTranscription";
 import LiveTranscription from "@components/LiveTranscription/LiveTranscription";
 import LanguageSelect from "@components/LanguageSelect/LanguageSelect";
 import style from "./Main.module.css";
+
+const MIN_CHUNK_MS      = 1500; // durée min avant de pouvoir couper
+const MAX_CHUNK_MS      = 8000; // durée max avant coupure forcée
+const SILENCE_HOLD_MS   = 500;  // silence continu requis pour couper
+const SILENCE_THRESHOLD = 0.02; // à ajuster selon micro/environnement
 
 function Main({ isTranscribing, onTranscribingChange, transcriptionProgress, onProgressChange, isCancelling, onCancel, transcriptionError, onErrorChange }) {
     const { t }                             = useTranslation();
@@ -23,6 +29,7 @@ function Main({ isTranscribing, onTranscribingChange, transcriptionProgress, onP
     const [language, setLanguage]           = useState("auto");
     const mediaRecorderRef                  = useRef(null);
     const chunkIntervalRef                  = useRef(null);
+    const silenceDetectorRef                = useRef(null);
     const transcriptionRef                  = useRef("");
     const segmentsRef                       = useRef({});
     const receivedCountRef                  = useRef(0);
@@ -121,27 +128,55 @@ function Main({ isTranscribing, onTranscribingChange, transcriptionProgress, onP
 
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            silenceDetectorRef.current = createSilenceDetector(stream);
 
             const recordChunk = () => {
                 const mediaRecorder = new MediaRecorder(stream);
                 mediaRecorderRef.current = mediaRecorder;
 
+                const chunkStart = Date.now();
+                let silenceStart = null;
+                let hadSpeech = false;
+
+                chunkIntervalRef.current = setInterval(() => {
+                    const volume = silenceDetectorRef.current.getVolume();
+                    const elapsed = Date.now() - chunkStart;
+
+                    if (volume >= SILENCE_THRESHOLD) {
+                        hadSpeech = true;
+                        silenceStart = null;
+                    } else if (silenceStart === null) {
+                        silenceStart = Date.now();
+                    }
+
+                    const silenceElapsed = silenceStart ? Date.now() - silenceStart : 0;
+                    const shouldStopOnSilence = elapsed >= MIN_CHUNK_MS && silenceElapsed >= SILENCE_HOLD_MS;
+                    const shouldStopOnMax = elapsed >= MAX_CHUNK_MS;
+
+                    if ((shouldStopOnSilence || shouldStopOnMax) && mediaRecorder.state === "recording") {
+                        clearInterval(chunkIntervalRef.current);
+                        mediaRecorder.stop();
+                    }
+                }, 100);
+
                 mediaRecorder.ondataavailable = async (e) => {
-                    if (e.data.size === 0) return;
+                    if (e.data.size === 0 || !hadSpeech) {
+                        // Silence pur : on ne transcrit pas, on repart directement
+                        if (mediaRecorderRef.current !== null) recordChunk();
+                        return;
+                    }
 
                     const arrayBuffer = await e.data.arrayBuffer();
                     const audioData = Array.from(new Uint8Array(arrayBuffer));
 
                     try {
-                        // Passer les tokens du chunk précédent
                         const [_, tokens] = await invoke("transcribe_chunk", {
                             audioData,
                             translate: translateMode,
                             promptTokens: promptTokensRef.current,
-                            language
+                            language,
                         });
 
-                        // Stocker les tokens pour le prochain chunk
                         promptTokensRef.current = tokens;
                     } catch (err) {
                         setError(t("live.micError", { message: e.message }));
@@ -151,10 +186,6 @@ function Main({ isTranscribing, onTranscribingChange, transcriptionProgress, onP
                 };
 
                 mediaRecorder.start();
-
-                setTimeout(() => {
-                    if (mediaRecorder.state === "recording") mediaRecorder.stop();
-                }, 3000);
             };
 
             recordChunk();
@@ -172,6 +203,11 @@ function Main({ isTranscribing, onTranscribingChange, transcriptionProgress, onP
         }
 
         if (chunkIntervalRef.current) clearInterval(chunkIntervalRef.current);
+
+        if (silenceDetectorRef.current) {
+            silenceDetectorRef.current.close();
+            silenceDetectorRef.current = null;
+        }
 
         promptTokensRef.current = [];
         setRecording(false);
