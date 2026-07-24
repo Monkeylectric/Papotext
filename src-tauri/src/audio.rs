@@ -288,6 +288,35 @@ fn build_segments(
     segments
 }
 
+/// Calcule le nombre max de contextes Whisper que la RAM disponible permet de charger
+///
+/// Utilise la taille du fichier modèle sur disque comme estimation de son
+/// empreinte RAM, avec une marge de sécurité par contexte (buffers de calcul, etc.)
+/// 
+/// # Arguments
+/// * `model_path` - Chemin du model
+fn max_pool_size_for_ram(model_path: &str) -> Result<usize, String> {
+    use sysinfo::System;
+
+    let model_size = std::fs::metadata(model_path)
+        .map_err(|e| e.to_string())?
+        .len();
+
+    // Marge par contexte : buffers de calcul internes à whisper.cpp, KV-cache, etc.
+    const CONTEXT_OVERHEAD_BYTES: u64 = 300 * 1024 * 1024; // ~300 Mo
+    let per_context_bytes = model_size + CONTEXT_OVERHEAD_BYTES;
+
+    let mut sys = System::new_all();
+    sys.refresh_memory();
+    let total_ram_bytes = sys.total_memory();
+
+    // On ne réserve que la moitié de la RAM totale au pool Whisper,
+    // pour laisser de la marge à l'OS, au webview Tauri et au reste de l'app
+    let ram_budget = (total_ram_bytes as f64 * 0.5) as u64;
+
+    Ok((ram_budget / per_context_bytes).max(1) as usize)
+}
+
 /// Chargement du pool Whisper
 /// 
 /// Charge plusieurs contextes Whisper 
@@ -338,9 +367,15 @@ fn load_pool(
         let cpu_percent = crate::settings::get_cpu_usage(app.clone())
             .unwrap_or(75) as f64 / 100.0;
 
-        // Taille maximale du pool
+        // Taille maximale du pool côté CPU
         let usable_threads = ((total_threads as f64 * cpu_percent) as usize).max(1);
-        let pool_size = usable_threads.min(4);
+        let cpu_pool_size = usable_threads.min(4);
+
+        // Taille maximale du pool côté RAM disponible
+        let ram_pool_size = max_pool_size_for_ram(&model_path)?;
+
+        // On prend le plus restrictif des deux
+        let pool_size = cpu_pool_size.min(ram_pool_size).max(1);
         let threads_per_segment = (usable_threads / pool_size).max(1) as i32;
 
         // Stocker dans AppState

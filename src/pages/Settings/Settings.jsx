@@ -21,13 +21,16 @@ function Settings() {
     const [error, setError]                     = useState("");
     const [confirmModel, setConfirmModel]       = useState(null);
     const [cpuUsage, setCpuUsage]               = useState(75);
+    const [totalRamMb, setTotalRamMb]           = useState(null);
 
     const MODELS = [
-        { name: "ggml-tiny.bin",   label: "Tiny",   size: "75 Mo",   desc: t("models.tiny.desc") },
-        { name: "ggml-base.bin",   label: "Base",   size: "142 Mo",  desc: t("models.base.desc") },
-        { name: "ggml-small.bin",  label: "Small",  size: "466 Mo",  desc: t("models.small.desc") },
-        { name: "ggml-medium.bin", label: "Medium", size: "1.5 Go",  desc: t("models.medium.desc") },
-        { name: "ggml-large.bin",  label: "Large",  size: "2.9 Go",  desc: t("models.large.desc") },
+        { name: "ggml-tiny.bin",          label: "Tiny",            size: "75 Mo",   sizeMb: 75,   desc: t("models.tiny.desc") },
+        { name: "ggml-base.bin",          label: "Base",            size: "142 Mo",  sizeMb: 142,  desc: t("models.base.desc") },
+        { name: "ggml-small.bin",         label: "Small",           size: "466 Mo",  sizeMb: 466,  desc: t("models.small.desc") },
+        { name: "ggml-medium.bin",        label: "Medium",          size: "1.5 Go",  sizeMb: 1500, desc: t("models.medium.desc") },
+        { name: "ggml-medium-q5_0.bin",   label: "Medium (léger)",  size: "539 Mo",  sizeMb: 539,  desc: t("models.mediumQ5.desc") },
+        { name: "ggml-large.bin",         label: "Large",           size: "2.9 Go",  sizeMb: 2900, desc: t("models.large.desc") },
+        { name: "ggml-large-v2-q5_0.bin", label: "Large (léger)",   size: "1.08 Go", sizeMb: 1080, desc: t("models.largeQ5.desc") },
     ]
     
     useEffect(() => {
@@ -47,15 +50,17 @@ function Settings() {
     }, []);
     
     async function loadData() {
-        const [model, models, cpu] = await Promise.all([
+        const [model, models, cpu, ram] = await Promise.all([
             invoke("get_selected_model"),
             invoke("get_available_models"),
             invoke("get_cpu_usage"),
+            invoke("get_total_ram_mb"),
         ]);
 
         setSelectedModel(model);
         setAvailableModels(models);
         setCpuUsage(cpu);
+        setTotalRamMb(ram);
     }
 
     async function updateCpuUsage(value) {
@@ -103,10 +108,15 @@ function Settings() {
         });
 
         if (selected) {
-            const filename = selected.split("\\").pop().split("/").pop();
-            await invoke("set_selected_model", { modelName: filename });
+            try {
+                const filename = await invoke("import_local_model", { sourcePath: selected });
+                await invoke("set_selected_model", { modelName: filename });
 
-            setSelectedModel(filename);
+                setSelectedModel(filename);
+                loadData(); // rafraîchit availableModels pour que le fichier importé apparaisse
+            } catch (e) {
+                setError(translateError(String(e)));
+            }
         }
     }
     
@@ -136,6 +146,9 @@ function Settings() {
                 {/* Grille */}
                 <div className={style.modelGrid}>
                     {MODELS.map((model) => {
+                        // Seuil heuristique : le modèle seul dépasse ~35% de la RAM totale
+                        const ramWarning = totalRamMb !== null && model.sizeMb > totalRamMb * 0.35;
+
                         return (
                             <ModelCard 
                                 key={model.name} 
@@ -144,6 +157,7 @@ function Settings() {
                                 isInstalled={availableModels.includes(model.name)} 
                                 isDownloading={downloading === model.name} 
                                 progress={progress} 
+                                ramWarning={ramWarning} 
                                 onUse={() => selectModel(model.name)} 
                                 onDelete={() => setConfirmModel(model.name)} 
                                 onDownload={() => downloadModel(model.name)}

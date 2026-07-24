@@ -46,6 +46,8 @@
         "modelDesc": "Le modèle détermine la qualité et la vitesse de transcription.",
         "activeModel": "Modèle actif : {{activeModel}}",
         "activeModelCard": "Actif",
+        "ramWarningBadge": "RAM limitée",
+        "ramWarningTooltip": "Ce modèle risque de consommer une part importante de votre RAM disponible.",
         "localSection": "Modèle local",
         "localDesc": "Tu peux télécharger manuellement un modèle depuis <0>HuggingFace</0> et le sélectionner ici.",
         "perfSection": "Performances",
@@ -94,7 +96,9 @@
         "base": { "desc": "Bon compromis vitesse/qualité" },
         "small": { "desc": "Recommandé" },
         "medium": { "desc": "Bonne qualité" },
-        "large": { "desc": "Meilleure qualité" }
+        "mediumQ5": { "desc": "Version compressée du modèle Medium - RAM et CPU réduits, légère perte de précision" },
+        "large": { "desc": "Meilleure qualité" },
+        "largeQ5":  { "desc": "Version compressée du modèle Large - bon compromis pour PC portable avec RAM limitée" }
     },
     "pagination": {
         "prev": "Page précédente",
@@ -126,8 +130,9 @@
         },
         "model": {
             "delete_default": "Impossible de supprimer le modèle par défaut",
-            "not_found":      "Modèle introuvable",
-            "copy":           "Impossible de copier le modèle par défaut : {{detail}}"
+            "not_found": "Modèle introuvable",
+            "copy": "Impossible de copier le modèle par défaut : {{detail}}",
+            "invalid_extension": "Le fichier sélectionné n'est pas un modèle valide (.bin)"
         }
     }
 }

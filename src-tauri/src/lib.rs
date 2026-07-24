@@ -118,10 +118,12 @@ pub fn run() {
             settings::set_selected_model,
             settings::get_cpu_usage,
             settings::set_cpu_usage,
+            settings::get_total_ram_mb,
             // Models
             models::get_available_models,
             models::download_model,
             models::delete_model,
+            models::import_local_model,
             // History
             history::save_transcription,
             history::get_transcriptions,

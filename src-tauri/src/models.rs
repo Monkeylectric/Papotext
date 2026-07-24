@@ -218,3 +218,47 @@ pub fn delete_model(
 
     Ok(())
 }
+
+/// Importe un modèle local dans le dossier des modèles de l'application
+/// 
+/// Copie un fichier .bin choisi par l'utilisateur (n'importe où sur le disque)
+/// vers le dossier des modèles de l'app, pour qu'il reste disponible
+/// après redémarrage sans dépendre du chemin d'origine
+/// 
+/// # Arguments
+/// * `app`         - Handle Tauri
+/// * `source_path` - Chemin complet du fichier .bin sélectionné par l'utilisateur
+///
+/// # Returns
+/// Le nom du fichier copié (à réutiliser avec `set_selected_model`)
+///
+/// # Errors
+/// * Si le fichier n'a pas l'extension .bin
+/// * Si la copie échoue
+#[tauri::command]
+pub fn import_local_model(
+    app: tauri::AppHandle,
+    source_path: String,
+) -> Result<String, String> {
+    let source = std::path::PathBuf::from(&source_path);
+
+    if source.extension().and_then(|e| e.to_str()) != Some("bin") {
+        return Err(err("error.model.invalid_extension"));
+    }
+
+    let filename = source
+        .file_name()
+        .and_then(|n| n.to_str())
+        .ok_or_else(|| err("error.audio.path"))?
+        .to_string();
+
+    let dest = get_models_dir(&app)?.join(&filename);
+
+    // Évite de recopier si le fichier est déjà présent
+    if !dest.exists() {
+        std::fs::copy(&source, &dest)
+            .map_err(|e| err_detail("error.model.copy", &e.to_string()))?;
+    }
+
+    Ok(filename)
+}

@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { Download, Trash2, Check, Loader2 } from "lucide-react";
+import { Download, Trash2, Check, Loader2, AlertTriangle } from "lucide-react";
 import style from "./ModelCard.module.css";
 
-function ModelCard({ model, isActive, isInstalled, isDownloading, progress, onUse, onDelete, onDownload }) {
+function ModelCard({ model, isActive, isInstalled, isDownloading, progress, ramWarning, onUse, onDelete, onDownload }) {
     const { t } = useTranslation();
 
     return (
@@ -15,6 +15,11 @@ function ModelCard({ model, isActive, isInstalled, isDownloading, progress, onUs
                 {isActive && (
                     <span className={style.badgeActive}>
                         <Check size={13} /> {t("settings.activeModelCard")}
+                    </span>
+                )}
+                {ramWarning && !isActive && (
+                    <span className={style.badgeWarning} title={t("settings.ramWarningTooltip")}>
+                        <AlertTriangle size={13} /> {t("settings.ramWarningBadge")}
                     </span>
                 )}
             </div>

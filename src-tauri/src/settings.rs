@@ -118,3 +118,14 @@ pub fn set_cpu_usage(
 
     Ok(())
 }
+
+/// Retourne la RAM totale du système en mégaoctets
+#[tauri::command]
+pub fn get_total_ram_mb() -> u64 {
+    use sysinfo::System;
+
+    let mut sys = System::new_all();
+    
+    sys.refresh_memory();
+    sys.total_memory() / (1024 * 1024) // à ajuster si total_memory() renvoie déjà des octets vs Ko selon la version
+}

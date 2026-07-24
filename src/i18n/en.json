@@ -46,6 +46,8 @@
         "modelDesc": "The model determines the quality and speed of transcription.",
         "activeModel": "Active model : {{activeModel}}",
         "activeModelCard": "Active",
+        "ramWarningBadge": "Limited RAM",
+        "ramWarningTooltip": "This model may consume a significant portion of your available RAM.",
         "localSection": "Local model",
         "localDesc": "You can manually download a model from <0>HuggingFace</0> and select it here.",
         "perfSection": "Performance",
@@ -94,7 +96,9 @@
         "base": { "desc": "Good speed/quality balance" },
         "small": { "desc": "Recommended" },
         "medium": { "desc": "Good quality" },
-        "large": { "desc": "Best quality" }
+        "mediumQ5": { "desc": "Compressed version of the Medium model - reduced RAM and CPU usage, slight loss of accuracy" },
+        "large": { "desc": "Best quality" },
+        "largeQ5":  { "desc": "Compressed version of the Large model - good compromise for laptops with limited RAM" }
     },
     "pagination": {
         "prev": "Previous page",
@@ -127,7 +131,8 @@
         "model": {
             "delete_default": "Cannot delete the default model",
             "not_found": "Model not found",
-            "copy": "Unable to copy the default model: {{detail}}"
+            "copy": "Unable to copy the default model: {{detail}}",
+            "invalid_extension": "The selected file is not a valid template (.bin)"
         }
     }
 }
