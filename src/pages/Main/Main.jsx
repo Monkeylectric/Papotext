@@ -195,7 +195,7 @@ function Main({ isTranscribing, onTranscribingChange, transcriptionProgress, onP
         }
     }
     
-    function stopRecording() {
+    async function stopRecording() {
         if (mediaRecorderRef.current) {
             mediaRecorderRef.current.stop();
             mediaRecorderRef.current.stream?.getTracks().forEach(t => t.stop());
@@ -204,13 +204,28 @@ function Main({ isTranscribing, onTranscribingChange, transcriptionProgress, onP
 
         if (chunkIntervalRef.current) clearInterval(chunkIntervalRef.current);
 
-        if (silenceDetectorRef.current) {
-            silenceDetectorRef.current.close();
-            silenceDetectorRef.current = null;
-        }
-
         promptTokensRef.current = [];
         setRecording(false);
+
+        // Sauvegarde de la session live dans l'historique (une seule entrée pour toute la session)
+        const finalText = liveText.trim();
+
+        if (finalText.length > 0) {
+            try {
+                const model = await invoke("get_selected_model");
+                const filename = `Live - ${new Date().toLocaleString()}`;
+
+                await invoke("save_transcription", {
+                    filename,
+                    audioPath: "",   // pas de fichier audio persisté pour une session live
+                    text: finalText,
+                    model,
+                    segments: null,
+                });
+            } catch (e) {
+                console.error("Impossible de sauvegarder la session live :", e);
+            }
+        }
     }
     
     function copyFileText(text) {
