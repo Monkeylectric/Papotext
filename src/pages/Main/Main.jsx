@@ -179,7 +179,7 @@ function Main({ isTranscribing, onTranscribingChange, transcriptionProgress, onP
 
                         promptTokensRef.current = tokens;
                     } catch (err) {
-                        setError(t("live.micError", { message: e.message }));
+                        setError(translateError(String(err)));
                     }
 
                     if (mediaRecorderRef.current !== null) recordChunk();
@@ -191,7 +191,7 @@ function Main({ isTranscribing, onTranscribingChange, transcriptionProgress, onP
             recordChunk();
             setRecording(true);
         } catch (e) {
-            setError(t("live.micError") + e.message);
+            setError(t("live.micError", { message: e.message }));
         }
     }
     

@@ -132,7 +132,8 @@
             "delete_default": "Cannot delete the default model",
             "not_found": "Model not found",
             "copy": "Unable to copy the default model: {{detail}}",
-            "invalid_extension": "The selected file is not a valid template (.bin)"
+            "invalid_extension": "The selected file is not a valid template (.bin)",
+            "invalid_name": "Invalid model name"
         }
     }
 }

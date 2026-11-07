@@ -285,6 +285,19 @@ fn build_segments(
         segments.push((0.0, total));
     }
 
+    // Fusionne un dernier segment trop court avec le précédent
+    const MIN_SEGMENT_SECS: f64 = 1.0;
+
+    if segments.len() > 1 {
+        let last = *segments.last().unwrap();
+
+        if last.1 - last.0 < MIN_SEGMENT_SECS {
+            segments.pop();
+
+            if let Some(prev) = segments.last_mut() { prev.1 = last.1; }
+        }
+    }
+
     segments
 }
 
@@ -434,9 +447,15 @@ async fn transcribe_segment_async(
     is_cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>,
     language: &str,
 ) -> Result<(String, Vec<Segment>), String> {
+    let ts = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_err(|e| e.to_string())?
+        .as_nanos();
+    let unique_id = ts ^ (&ts as *const _ as u128);
+
     // Création du fichier temporaire
     let temp_path = std::env::temp_dir()
-        .join(format!("segment_{}_{}.wav", index, start as u64));
+        .join(format!("segment_{}_{}_{}.wav", index, start as u64, unique_id));
 
     // Nettoyage automatique
     let _guard = TempFiles::new(vec![temp_path.clone()]);
@@ -484,6 +503,10 @@ async fn transcribe_segment_async(
         let ctx = ctx_arc.lock()
             .map_err(|e| e.to_string())?;
 
+        if is_cancelled.load(std::sync::atomic::Ordering::SeqCst) {
+            return Ok((String::new(), Vec::new()));
+        }
+
         // Lecture du WAV
         let mut reader = hound::WavReader::open(&temp_path_clone)
             .map_err(|e| e.to_string())?;
@@ -494,6 +517,10 @@ async fn transcribe_segment_async(
             .map(|s| s.map(|v| v as f32 / 32768.0))
             .collect::<Result<Vec<f32>, _>>()
             .map_err(|e| e.to_string())?;
+
+        if samples.len() < 16_000 { // moins d'1 s d'audio : Whisper plante ou ne renvoie rien
+            return Ok((String::new(), Vec::new()));
+        }
 
         // Création d'un état de transcription
         let mut whisper_state = ctx.create_state()
@@ -656,6 +683,10 @@ async fn transcribe_short(
             .map(|s| s.map(|v| v as f32 / 32768.0))
             .collect::<Result<Vec<f32>, _>>()
             .map_err(|e| e.to_string())?;
+
+        if samples.len() < 16_000 { // moins d'1 s d'audio : Whisper plante ou ne renvoie rien
+            return Ok((String::new(), Vec::new()));
+        }
 
         let mut whisper_state = ctx.create_state()
             .map_err(|e| e.to_string())?;
@@ -1022,6 +1053,10 @@ pub async fn transcribe_chunk(
         .map(|s| s.map(|sample| sample as f32 / 32768.0))
         .collect::<Result<Vec<f32>, _>>()
         .map_err(|e| e.to_string())?;
+
+    if samples.len() < 16_000 { // moins d'1 s d'audio : Whisper plante ou ne renvoie rien
+        return Ok((String::new(), prompt_tokens));
+    }
 
     // Transcription
     let (text, tokens) = {

@@ -132,7 +132,8 @@
             "delete_default": "Impossible de supprimer le modèle par défaut",
             "not_found": "Modèle introuvable",
             "copy": "Impossible de copier le modèle par défaut : {{detail}}",
-            "invalid_extension": "Le fichier sélectionné n'est pas un modèle valide (.bin)"
+            "invalid_extension": "Le fichier sélectionné n'est pas un modèle valide (.bin)",
+            "invalid_name": "Nom de modèle invalide"
         }
     }
 }

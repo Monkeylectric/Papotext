@@ -29,7 +29,7 @@ function Settings() {
         { name: "ggml-small.bin",         label: "Small",           size: "466 Mo",  sizeMb: 466,  desc: t("models.small.desc") },
         { name: "ggml-medium.bin",        label: "Medium",          size: "1.5 Go",  sizeMb: 1500, desc: t("models.medium.desc") },
         { name: "ggml-medium-q5_0.bin",   label: "Medium (léger)",  size: "539 Mo",  sizeMb: 539,  desc: t("models.mediumQ5.desc") },
-        { name: "ggml-large.bin",         label: "Large",           size: "2.9 Go",  sizeMb: 2900, desc: t("models.large.desc") },
+        { name: "ggml-large-v3.bin",      label: "Large",           size: "2.9 Go",  sizeMb: 2900, desc: t("models.large.desc") },
         { name: "ggml-large-v2-q5_0.bin", label: "Large (léger)",   size: "1.08 Go", sizeMb: 1080, desc: t("models.largeQ5.desc") },
     ]
     

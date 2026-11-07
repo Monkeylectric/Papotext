@@ -3,6 +3,15 @@ use tauri::Emitter;
 use tauri_plugin_http::reqwest;
 use crate::errors::{err, err_detail};
 
+/// Un nom de modèle valide : fichier .bin simple, sans chemin
+fn is_valid_model_name(name: &str) -> bool {
+    !name.is_empty()
+        && name.ends_with(".bin")
+        && !name.contains('/')
+        && !name.contains('\\')
+        && !name.contains("..")
+}
+
 /// Récupération du dossier local des modèles
 /// 
 /// # Arguments
@@ -123,6 +132,10 @@ pub async fn download_model(
     app: tauri::AppHandle, 
     model_name: String
 ) -> Result<(), String> {
+    if !is_valid_model_name(&model_name) {
+        return Err(err("error.model.invalid_name"));
+    }
+
     // Construction de l'URL de téléchargement
     let url = format!(
         "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/{}",
@@ -139,7 +152,8 @@ pub async fn download_model(
         .get(&url)
         .send()
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| e.to_string())?
+        .error_for_status().map_err(|e| e.to_string())?;
 
     // Taille totale du fichier
     let total_size = response
@@ -202,6 +216,10 @@ pub fn delete_model(
     if model_name == "ggml-small.bin" {
         //return Err("Impossible de supprimer le modèle par défaut".to_string());
         return Err(err("error.model.delete_default"));
+    }
+
+    if !is_valid_model_name(&model_name) {
+        return Err(err("error.model.invalid_name"));
     }
 
     let model_path = get_models_dir(&app)?.join(&model_name);

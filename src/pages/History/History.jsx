@@ -180,8 +180,9 @@ function History() {
 
         try {
             await invoke("update_transcription", { id, text: textToSave });
-            setTranscriptions(prev => prev.map(t => t.id === id ? { ...t, text: textToSave } : t));
-            setSelected(prev => prev?.id === id ? { ...prev, text: textToSave } : prev);
+            setTranscriptions(prev => prev.map(t => t.id === id ? { ...t, text: textToSave, segments: null } : t));
+            setSelected(prev => prev?.id === id ? { ...prev, text: textToSave, segments: null } : prev);
+            audioCacheRef.current.delete(id); // sinon le lecteur garde les anciens segments en cache
 
             // Ne pas appeler cancelEdit() en mode auto-save
             if (textOverride === undefined) cancelEdit();

@@ -153,19 +153,25 @@ pub fn get_transcriptions(
 
     let (count_sql, items_sql) = match &query {
         Some(_) => (
-            "SELECT COUNT(*) FROM transcriptions WHERE filename LIKE ?1 OR text LIKE ?1",
+            "SELECT COUNT(*) FROM transcriptions WHERE filename LIKE ?1 ESCAPE '\\' OR text LIKE ?1",
             "SELECT id, filename, audio_path, text, model, created_at, segments 
-            FROM transcriptions WHERE filename LIKE ?1 OR text LIKE ?1
-            ORDER BY created_at DESC LIMIT ?2 OFFSET ?3"
+            FROM transcriptions WHERE filename LIKE ?1 ESCAPE '\\' OR text LIKE ?1 ESCAPE '\\'
+            ORDER BY created_at DESC, id DESC LIMIT ?2 OFFSET ?3"
         ),
         None => (
             "SELECT COUNT(*) FROM transcriptions",
             "SELECT id, filename, audio_path, text, model, created_at, segments 
-            FROM transcriptions ORDER BY created_at DESC LIMIT ?1 OFFSET ?2"
+            FROM transcriptions ORDER BY created_at DESC, id DESC LIMIT ?1 OFFSET ?2"
         ),
     };
 
-    let pattern = query.as_deref().map(|q| format!("%{}%", q));
+    let pattern = query.as_deref().map(|q| {
+        let escaped = q
+            .replace('\\', "\\\\")
+            .replace('%', "\\%")
+            .replace('_', "\\_");
+        format!("%{}%", escaped)
+    });
 
     // Nombre total de transcriptions
     let total: i64 = match &pattern {
@@ -224,7 +230,7 @@ pub fn update_transcription(
         .map_err(|e| e.to_string())?;
 
     db.execute(
-        "UPDATE transcriptions SET text = ?1 WHERE id = ?2",
+        "UPDATE transcriptions SET text = ?1, segments = NULL WHERE id = ?2",
         rusqlite::params![text, id],
     ).map_err(|e| e.to_string())?;
 
@@ -270,8 +276,25 @@ pub fn get_audio_base64(path: String) -> Result<String, String> {
     file.read_to_end(&mut buf)
         .map_err(|e| e.to_string())?;
 
-    // Détection du format pour le data URL
-    let mime = if path.ends_with(".mp3") { "audio/mpeg" } else { "audio/wav" };
+    // Détection du format pour le data URL par le contenu : les conteneurs MP4/M4A portent "ftyp" aux octets 4..8 
+    // (couvre aussi les fichiers M4A renommés en .mp3)
+    // Sinon, par l'extension, insensible à la casse
+    let mime = if buf.len() > 12 && &buf[4..8] == b"ftyp" {
+        "audio/mp4"
+    } else {
+        let ext = std::path::Path::new(&path)
+            .extension()
+            .and_then(|e| e.to_str())
+            .map(|e| e.to_ascii_lowercase())
+            .unwrap_or_default();
+
+        match ext.as_str() {
+            "mp3"  => "audio/mpeg",
+            "ogg"  => "audio/ogg",
+            "flac" => "audio/flac",
+            _      => "audio/wav",
+        }
+    };
 
     Ok(format!("data:{};base64,{}", mime, base64_encode(&buf)))
 }
